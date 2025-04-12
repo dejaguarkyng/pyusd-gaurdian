@@ -3,478 +3,121 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PYUSD Transaction Monitor</title>
+  <title>PYUSD Guardian</title>
   <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        fontFamily: {
+          'sans': ['Poppins', 'sans-serif'],
+          'serif': ['Playfair Display', 'serif'],
+        },
+        extend: {
+          colors: {
+            gold: {
+              50: '#FFF9E5',
+              100: '#FFF0BF',
+              200: '#FFE380',
+              300: '#FFD740',
+              400: '#FFC700',
+              500: '#F2B200',
+              600: '#D69E00',
+              700: '#B38600',
+              800: '#8F6B00',
+              900: '#6B5000',
+            },
+            dark: {
+              800: '#1E1E1E',
+              900: '#121212',
+            }
+          }
+        }
+      }
+    }
+  </script>
   <style type="text/tailwind">
     @layer components {
-      .status-badge {
-        @apply px-2 py-1 text-xs font-medium rounded-full;
+      .gold-gradient {
+        @apply bg-gradient-to-r from-gold-400 to-gold-600;
       }
-      .status-active {
-        @apply bg-green-100 text-green-800;
+      .gold-text {
+        @apply text-transparent bg-clip-text gold-gradient;
       }
-      .status-warning {
-        @apply bg-yellow-100 text-yellow-800;
-      }
-      .status-error {
-        @apply bg-red-100 text-red-800;
+      .gold-border {
+        @apply border-gold-400;
       }
       .card {
-        @apply bg-white rounded-lg shadow-md p-4 border border-gray-200;
+        @apply bg-dark-800 rounded-lg border border-gold-800/30 shadow-lg overflow-hidden;
+      }
+      .card-header {
+        @apply px-6 py-4 border-b border-gold-800/30 bg-dark-900/50;
+      }
+      .btn-gold {
+        @apply gold-gradient text-dark-900 font-medium px-4 py-2 rounded-md hover:shadow-md transition-all;
+      }
+      .btn-dark {
+        @apply bg-dark-900 text-gold-300 border border-gold-700/30 px-4 py-2 rounded-md hover:border-gold-400 transition-all;
       }
     }
   </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
-  <div class="container mx-auto px-4 py-8">
+<body class="bg-dark-900 text-white font-sans">
+  <div class="min-h-screen flex flex-col">
     <!-- Header -->
-    <header class="mb-8">
-      <div class="flex justify-between items-center">
-        <div>
-          <h1 class="text-3xl font-bold text-gray-900">PYUSD Transaction Monitor</h1>
-          <p class="text-gray-600">Real-time blockchain transaction monitoring</p>
+    <header class="border-b border-gold-800/30 py-4 bg-dark-800">
+      <div class="container mx-auto px-6 flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+          <div class="gold-gradient w-10 h-10 rounded-full flex items-center justify-center shadow-lg">
+            <i class="fas fa-shield-alt text-dark-900 text-lg"></i>
+          </div>
+          <h1 class="font-serif text-2xl font-bold gold-text">PYUSD Guardian</h1>
         </div>
-        <div class="flex items-center gap-2">
-          <span id="connection-status" class="status-badge status-active">Connecting...</span>
-          <button id="refresh-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium">
-            Refresh
+        <div class="flex items-center space-x-6">
+          <div id="connection-status" class="flex items-center space-x-2">
+            <span class="h-2 w-2 bg-green-500 rounded-full"></span>
+            <span class="text-sm text-gold-200">Monitoring</span>
+          </div>
+          <button id="refresh-btn" class="btn-gold">
+            <i class="fas fa-sync-alt mr-2"></i>Refresh
           </button>
         </div>
       </div>
     </header>
 
-    <!-- Dashboard Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-      <div class="card">
-        <h3 class="text-gray-500 text-sm font-medium mb-1">Current Block</h3>
-        <p id="current-block" class="text-2xl font-bold">-</p>
-      </div>
-      <div class="card">
-        <h3 class="text-gray-500 text-sm font-medium mb-1">PYUSD Transactions</h3>
-        <p id="pyusd-tx-count" class="text-2xl font-bold">-</p>
-      </div>
-      <div class="card">
-        <h3 class="text-gray-500 text-sm font-medium mb-1">Flagged Transactions</h3>
-        <p id="flagged-tx-count" class="text-2xl font-bold">-</p>
-      </div>
-      <div class="card">
-        <h3 class="text-gray-500 text-sm font-medium mb-1">Monitoring Since</h3>
-        <p id="monitoring-since" class="text-2xl font-bold">-</p>
-      </div>
-    </div>
-
     <!-- Main Content -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <!-- Transaction Log -->
-      <div class="lg:col-span-2">
-        <div class="card">
-          <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-bold text-gray-900">Transaction Log</h2>
-            <div class="flex gap-2">
-              <select id="tx-filter" class="text-sm border rounded-md px-2 py-1">
-                <option value="all">All Transactions</option>
-                <option value="flagged">Flagged Only</option>
-              </select>
-            </div>
-          </div>
-          <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">TX Hash</th>
-                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Block</th>
-                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody id="tx-table-body" class="bg-white divide-y divide-gray-200">
-                <!-- Transactions will be inserted here -->
-                <tr>
-                  <td colspan="4" class="px-4 py-8 text-center text-gray-500">
-                    Waiting for transactions...
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+    <main class="flex-1 container mx-auto px-6 py-8">
+      <!-- Stats -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="card p-6">
+          <p class="text-sm text-gold-300 mb-1">Current Block</p>
+          <p id="current-block" class="text-2xl font-bold gold-text">-</p>
+        </div>
+        <div class="card p-6">
+          <p class="text-sm text-gold-300 mb-1">Transactions</p>
+          <p id="pyusd-tx-count" class="text-2xl font-bold gold-text">-</p>
+        </div>
+        <div class="card p-6">
+          <p class="text-sm text-gold-300 mb-1">Flagged</p>
+          <p id="flagged-tx-count" class="text-2xl font-bold text-red-500">-</p>
+        </div>
+        <div class="card p-6">
+          <p class="text-sm text-gold-300 mb-1">Monitoring Since</p>
+          <p id="monitoring-since" class="text-2xl font-bold gold-text">-</p>
         </div>
       </div>
 
-      <!-- Alerts Panel -->
-      <div class="lg:col-span-1">
-        <div class="card h-full">
-          <h2 class="text-xl font-bold text-gray-900 mb-4">Alerts</h2>
-          <div id="alerts-container" class="space-y-3 overflow-y-auto max-h-[500px]">
-            <!-- Alerts will be inserted here -->
-            <div class="text-center text-gray-500 py-8">
-              No alerts to display
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Transaction Details Modal -->
-    <div id="tx-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
-      <div class="bg-white rounded-lg max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
-        <div class="p-4 border-b">
-          <div class="flex justify-between items-center">
-            <h3 class="text-lg font-bold">Transaction Details</h3>
-            <button id="close-modal" class="text-gray-500 hover:text-gray-700">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
-        <div class="p-4">
-          <div id="tx-details-content">
-            <!-- Transaction details will be inserted here -->
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- JavaScript -->
-  <script>
-    // Mock data for demonstration
-    const mockData = {
-      currentBlock: 18245678,
-      startTime: new Date(Date.now() - 3600000 * 24), // 24 hours ago
-      transactions: [],
-      alerts: []
-    };
-
-    // Generate some mock transactions
-    for (let i = 0; i < 15; i++) {
-      const isFlagged = Math.random() > 0.7;
-      mockData.transactions.push({
-        hash: '0x' + Math.random().toString(16).substr(2, 40),
-        blockNumber: mockData.currentBlock - Math.floor(Math.random() * 100),
-        flagged: isFlagged,
-        from: '0x' + Math.random().toString(16).substr(2, 40),
-        to: Math.random() > 0.5 ? '0x6c3ea9036406852006290770b2e17e0e4f37f978' : '0x' + Math.random().toString(16).substr(2, 40),
-        timestamp: new Date(Date.now() - Math.floor(Math.random() * 3600000 * 24)),
-        complianceFlags: isFlagged ? [
-          {
-            rule: ['Suspicious Pattern', 'Large Transfer', 'Known Address'][Math.floor(Math.random() * 3)],
-            details: 'Potential compliance issue detected'
-          }
-        ] : []
-      });
-    }
-
-    // Generate some mock alerts from flagged transactions
-    mockData.transactions.filter(tx => tx.flagged).forEach(tx => {
-      mockData.alerts.push({
-        txHash: tx.hash,
-        rule: tx.complianceFlags[0].rule,
-        details: tx.complianceFlags[0].details,
-        timestamp: tx.timestamp
-      });
-    });
-
-    // DOM Elements
-    const connectionStatus = document.getElementById('connection-status');
-    const currentBlockEl = document.getElementById('current-block');
-    const pyusdTxCountEl = document.getElementById('pyusd-tx-count');
-    const flaggedTxCountEl = document.getElementById('flagged-tx-count');
-    const monitoringSinceEl = document.getElementById('monitoring-since');
-    const txTableBody = document.getElementById('tx-table-body');
-    const alertsContainer = document.getElementById('alerts-container');
-    const txFilter = document.getElementById('tx-filter');
-    const refreshBtn = document.getElementById('refresh-btn');
-    const txModal = document.getElementById('tx-modal');
-    const closeModal = document.getElementById('close-modal');
-    const txDetailsContent = document.getElementById('tx-details-content');
-
-    // Initialize the UI
-    function initializeUI() {
-      // Set connection status
-      connectionStatus.textContent = 'Connected';
-      connectionStatus.classList.remove('status-active');
-      connectionStatus.classList.add('status-active');
-
-      // Update dashboard stats
-      updateStats();
-
-      // Render transactions and alerts
-      renderTransactions();
-      renderAlerts();
-
-      // Set up event listeners
-      setupEventListeners();
-    }
-
-    // Update dashboard statistics
-    function updateStats() {
-      currentBlockEl.textContent = mockData.currentBlock.toLocaleString();
-      pyusdTxCountEl.textContent = mockData.transactions.length;
-      flaggedTxCountEl.textContent = mockData.transactions.filter(tx => tx.flagged).length;
-      monitoringSinceEl.textContent = formatDate(mockData.startTime);
-    }
-
-    // Render transaction table
-    function renderTransactions() {
-      // Filter transactions if needed
-      const filteredTxs = txFilter.value === 'flagged' 
-        ? mockData.transactions.filter(tx => tx.flagged)
-        : mockData.transactions;
-      
-      if (filteredTxs.length === 0) {
-        txTableBody.innerHTML = `
-          <tr>
-            <td colspan="4" class="px-4 py-8 text-center text-gray-500">
-              No transactions to display
-            </td>
-          </tr>
-        `;
-        return;
-      }
-
-      // Sort by block number (descending)
-      const sortedTxs = [...filteredTxs].sort((a, b) => b.blockNumber - a.blockNumber);
-      
-      // Generate table rows
-      txTableBody.innerHTML = sortedTxs.map(tx => `
-        <tr>
-          <td class="px-4 py-3 whitespace-nowrap">
-            <div class="flex items-center">
-              <div class="text-sm font-medium text-gray-900 truncate max-w-[120px]" title="${tx.hash}">
-                ${tx.hash.substring(0, 10)}...
-              </div>
-            </div>
-          </td>
-          <td class="px-4 py-3 whitespace-nowrap">
-            <div class="text-sm text-gray-900">${tx.blockNumber}</div>
-          </td>
-          <td class="px-4 py-3 whitespace-nowrap">
-            <span class="status-badge ${tx.flagged ? 'status-error' : 'status-active'}">
-              ${tx.flagged ? 'Flagged' : 'Normal'}
-            </span>
-          </td>
-          <td class="px-4 py-3 whitespace-nowrap text-sm font-medium">
-            <button class="text-blue-600 hover:text-blue-900 view-tx" data-hash="${tx.hash}">
-              View
-            </button>
-          </td>
-        </tr>
-      `).join('');
-
-      // Add event listeners to view buttons
-      document.querySelectorAll('.view-tx').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const hash = btn.getAttribute('data-hash');
-          showTransactionDetails(hash);
-        });
-      });
-    }
-
-    // Render alerts
-    function renderAlerts() {
-      if (mockData.alerts.length === 0) {
-        alertsContainer.innerHTML = `
-          <div class="text-center text-gray-500 py-8">
-            No alerts to display
-          </div>
-        `;
-        return;
-      }
-
-      // Sort alerts by timestamp (newest first)
-      const sortedAlerts = [...mockData.alerts].sort((a, b) => b.timestamp - a.timestamp);
-      
-      alertsContainer.innerHTML = sortedAlerts.map(alert => `
-        <div class="p-3 bg-red-50 border border-red-200 rounded-md">
-          <div class="flex justify-between">
-            <span class="text-xs font-medium text-red-800">${alert.rule}</span>
-            <span class="text-xs text-gray-500">${formatTime(alert.timestamp)}</span>
-          </div>
-          <p class="text-sm mt-1 text-gray-800">${alert.details}</p>
-          <div class="mt-2">
-            <button class="text-xs text-blue-600 hover:text-blue-800 view-tx" data-hash="${alert.txHash}">
-              View Transaction
-            </button>
-          </div>
-        </div>
-      `).join('');
-
-      // Add event listeners to view buttons in alerts
-      alertsContainer.querySelectorAll('.view-tx').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const hash = btn.getAttribute('data-hash');
-          showTransactionDetails(hash);
-        });
-      });
-    }
-
-    // Show transaction details in modal
-    function showTransactionDetails(hash) {
-      const tx = mockData.transactions.find(t => t.hash === hash);
-      if (!tx) return;
-
-      txDetailsContent.innerHTML = `
-        <div class="space-y-4">
-          <div>
-            <h4 class="text-sm font-medium text-gray-500">Transaction Hash</h4>
-            <p class="text-sm font-mono break-all">${tx.hash}</p>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <h4 class="text-sm font-medium text-gray-500">Block</h4>
-              <p class="text-sm">${tx.blockNumber}</p>
-            </div>
-            <div>
-              <h4 class="text-sm font-medium text-gray-500">Timestamp</h4>
-              <p class="text-sm">${formatDate(tx.timestamp)}</p>
-            </div>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <h4 class="text-sm font-medium text-gray-500">From</h4>
-              <p class="text-sm font-mono break-all">${tx.from}</p>
-            </div>
-            <div>
-              <h4 class="text-sm font-medium text-gray-500">To</h4>
-              <p class="text-sm font-mono break-all">${tx.to}</p>
-            </div>
-          </div>
-          ${tx.flagged ? `
-            <div class="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
-              <h4 class="text-sm font-medium text-red-800">Compliance Flags</h4>
-              <ul class="mt-2 space-y-2">
-                ${tx.complianceFlags.map(flag => `
-                  <li class="text-sm">
-                    <span class="font-medium">${flag.rule}:</span> ${flag.details}
-                  </li>
-                `).join('')}
-              </ul>
-            </div>
-          ` : ''}
-        </div>
-      `;
-
-      txModal.classList.remove('hidden');
-    }
-
-    // Set up event listeners
-    function setupEventListeners() {
-      // Close modal
-      closeModal.addEventListener('click', () => {
-        txModal.classList.add('hidden');
-      });
-
-      // Close modal when clicking outside
-      txModal.addEventListener('click', (e) => {
-        if (e.target === txModal) {
-          txModal.classList.add('hidden');
-        }
-      });
-
-      // Filter transactions
-      txFilter.addEventListener('change', renderTransactions);
-
-      // Refresh button
-      refreshBtn.addEventListener('click', () => {
-        // Simulate fetching new data
-        connectionStatus.textContent = 'Refreshing...';
-        connectionStatus.classList.remove('status-active', 'status-error');
-        connectionStatus.classList.add('status-warning');
-
-        setTimeout(() => {
-          // Add a new mock transaction
-          const newTx = {
-            hash: '0x' + Math.random().toString(16).substr(2, 40),
-            blockNumber: mockData.currentBlock + 1,
-            flagged: Math.random() > 0.7,
-            from: '0x' + Math.random().toString(16).substr(2, 40),
-            to: '0x6c3ea9036406852006290770b2e17e0e4f37f978',
-            timestamp: new Date()
-          };
-
-          if (newTx.flagged) {
-            newTx.complianceFlags = [{
-              rule: ['Suspicious Pattern', 'Large Transfer', 'Known Address'][Math.floor(Math.random() * 3)],
-              details: 'Potential compliance issue detected'
-            }];
-
-            // Add to alerts
-            mockData.alerts.push({
-              txHash: newTx.hash,
-              rule: newTx.complianceFlags[0].rule,
-              details: newTx.complianceFlags[0].details,
-              timestamp: newTx.timestamp
-            });
-          }
-
-          mockData.transactions.push(newTx);
-          mockData.currentBlock += 1;
-
-          // Update UI
-          updateStats();
-          renderTransactions();
-          renderAlerts();
-
-          // Reset connection status
-          connectionStatus.textContent = 'Connected';
-          connectionStatus.classList.remove('status-warning');
-          connectionStatus.classList.add('status-active');
-        }, 1000);
-      });
-
-      // Simulate real-time updates
-      setInterval(() => {
-        // Randomly add new transactions
-        if (Math.random() > 0.7) {
-          const newTx = {
-            hash: '0x' + Math.random().toString(16).substr(2, 40),
-            blockNumber: mockData.currentBlock + 1,
-            flagged: Math.random() > 0.7,
-            from: '0x' + Math.random().toString(16).substr(2, 40),
-            to: Math.random() > 0.5 ? '0x6c3ea9036406852006290770b2e17e0e4f37f978' : '0x' + Math.random().toString(16).substr(2, 40),
-            timestamp: new Date()
-          };
-
-          if (newTx.flagged) {
-            newTx.complianceFlags = [{
-              rule: ['Suspicious Pattern', 'Large Transfer', 'Known Address'][Math.floor(Math.random() * 3)],
-              details: 'Potential compliance issue detected'
-            }];
-
-            // Add to alerts
-            mockData.alerts.push({
-              txHash: newTx.hash,
-              rule: newTx.complianceFlags[0].rule,
-              details: newTx.complianceFlags[0].details,
-              timestamp: newTx.timestamp
-            });
-          }
-
-          mockData.transactions.push(newTx);
-          mockData.currentBlock += 1;
-
-          // Update UI
-          updateStats();
-          renderTransactions();
-          renderAlerts();
-        }
-      }, 15000); // Every 15 seconds
-    }
-
-    // Helper function to format date
-    function formatDate(date) {
-      return new Date(date).toLocaleString();
-    }
-
-    // Helper function to format time
-    function formatTime(date) {
-      return new Date(date).toLocaleTimeString();
-    }
-
-    // Initialize the application
-    document.addEventListener('DOMContentLoaded', initializeUI);
-  </script>
-</body>
-</html>
+      <!-- Transaction Monitor -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Transaction List -->
+        <div class="lg:col-span-2">
+          <div class="card">
+            <div class="card-header flex justify-between items-center">
+              <h2 class="font-serif text-xl gold-text">Transactions</h2>
+              <select id="tx-filter" class="bg-dark-900 text-gold-200 text-sm rounded-md px-3 py-2
