@@ -1,6 +1,10 @@
 // Import dependencies
 import { config } from 'dotenv';
 import { ethers } from 'ethers';
+import { getTransactionTrace } from './traceAnalyzer.js';
+import { analyzeTrace } from './traceParser.js';
+import { evaluateCompliance } from './complianceEngine.js';
+
 
 // Load environment variables
 config();
@@ -39,12 +43,26 @@ async function monitorBlocks() {
               to === PYUSD_ADDRESS ||
               from === PYUSD_ADDRESS ||
               input.includes(PYUSD_ADDRESS.slice(2))
-            );
-
+            );            
             if (involvesPYUSD) {
-              console.log(`🔍 PYUSD-related TX found: ${tx.hash}`);
-              // 👉 Hook into Stage 2: traceAnalyzer.analyze(tx.hash)
-            }
+                console.log(`🔍 PYUSD-related TX found: ${tx.hash}`);
+              
+                const trace = await getTransactionTrace(tx.hash);
+                if (trace) {
+                  const report = analyzeTrace(trace);
+                  const complianceFlags = evaluateCompliance(trace, tx);
+              
+                  const isNonCompliant = complianceFlags.length > 0;
+              
+                  if (report.flagged || isNonCompliant) {
+                    console.log(`🚨 TX ${tx.hash} flagged!`);
+                    console.log(report);
+                    console.log('📋 Compliance Issues:', complianceFlags);
+                  } else {
+                    console.log(`✅ TX ${tx.hash} is clean.`);
+                  }
+                }
+              }
           }
         }
 
