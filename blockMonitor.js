@@ -55,6 +55,4 @@ async function monitorBlocks() {
     }
   }, 5000); // Poll every 5s
 }
-
-// Start monitoring
 monitorBlocks();
