@@ -71,6 +71,9 @@
       .theme-toggle {
         @apply w-10 h-10 rounded-full flex items-center justify-center cursor-pointer;
       }
+      .loading-spinner {
+        @apply inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite];
+      }
     }
   </style>
 </head>
@@ -202,6 +205,17 @@
     </div>
   </div>
 
+  <!-- Loading Modal -->
+  <div id="loading-modal" class="fixed inset-0 dark:bg-black/80 bg-black/50 backdrop-blur-sm flex items-center justify-center hidden z-50">
+    <div class="dark:bg-dark-800 bg-white rounded-lg border dark:border-gold-700/50 border-gold-300/50 p-8 max-w-md w-full mx-4 text-center">
+      <div class="gold-gradient w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center">
+        <div class="loading-spinner dark:text-dark-900 text-white"></div>
+      </div>
+      <h3 class="font-serif text-xl gold-text mb-2" id="loading-title">Loading Data</h3>
+      <p class="dark:text-gold-200 text-gold-700" id="loading-message">Please wait while we fetch the latest information...</p>
+    </div>
+  </div>
+
   <!-- Error Toast -->
   <div id="error-toast" class="fixed bottom-4 right-4 bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg hidden">
     <div class="flex items-center">
@@ -287,6 +301,21 @@
     const txDetailsContent = document.getElementById('tx-details-content');
     const errorToast = document.getElementById('error-toast');
     const errorMessage = document.getElementById('error-message');
+    const loadingModal = document.getElementById('loading-modal');
+    const loadingTitle = document.getElementById('loading-title');
+    const loadingMessage = document.getElementById('loading-message');
+
+    // Show loading modal
+    function showLoading(title = 'Loading Data', message = 'Please wait while we fetch the latest information...') {
+      loadingTitle.textContent = title;
+      loadingMessage.textContent = message;
+      loadingModal.classList.remove('hidden');
+    }
+
+    // Hide loading modal
+    function hideLoading() {
+      loadingModal.classList.add('hidden');
+    }
 
     // Helper function to show error toast
     function showError(message) {
@@ -298,7 +327,11 @@
     }
 
     // Helper function for API calls with error handling
-    async function fetchAPI(endpoint, options = {}) {
+    async function fetchAPI(endpoint, options = {}, showLoadingIndicator = false) {
+      if (showLoadingIndicator) {
+        showLoading('Loading Data', 'Fetching data from the server...');
+      }
+      
       try {
         const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
         if (!response.ok) {
@@ -309,6 +342,10 @@
       } catch (error) {
         showError(`Failed to fetch data: ${error.message}`);
         throw error;
+      } finally {
+        if (showLoadingIndicator) {
+          hideLoading();
+        }
       }
     }
 
@@ -408,6 +445,7 @@
     // Initialize the UI
     async function initializeUI() {
       updateConnectionStatus('connecting');
+      showLoading('Initializing', 'Setting up PYUSD Guardian...');
       
       try {
         // Fetch initial status
@@ -466,6 +504,8 @@
             </div>
           </div>
         `;
+      } finally {
+        hideLoading();
       }
     }
 
@@ -608,6 +648,8 @@
           <p>Loading transaction details...</p>
         </div>
       `;
+      
+      showLoading('Loading Transaction', 'Fetching transaction details...');
       
       try {
         // Find transaction in local state first
@@ -760,6 +802,8 @@
             <p class="text-sm dark:text-gold-200/70 text-gray-600">${error.message || 'An unknown error occurred'}</p>
           </div>
         `;
+      } finally {
+        hideLoading();
       }
     }
 
@@ -825,6 +869,7 @@
         // Show refreshing state
         refreshBtn.disabled = true;
         refreshBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i>Refreshing...';
+        showLoading('Refreshing Data', 'Fetching the latest transactions and alerts...');
 
         try {
           // Fetch latest status
@@ -864,6 +909,7 @@
           // Reset button
           refreshBtn.disabled = false;
           refreshBtn.innerHTML = '<i class="fas fa-sync-alt mr-2"></i>Refresh';
+          hideLoading();
         }
       });
     }
