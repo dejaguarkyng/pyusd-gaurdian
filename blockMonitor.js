@@ -164,7 +164,8 @@ async function processTransaction(tx, blockNumber) {
 // Process a single block
 async function processBlock(blockNumber) {
   try {
-    const block = await withRetry(() => provider.getBlockWithTransactions(blockNumber));
+    // Get block with transactions using ethers.js standard methods
+    const block = await withRetry(() => provider.getBlock(blockNumber, true));
     logger.info(`Scanning block`, { blockNumber, txCount: block.transactions.length });
 
     // Process transactions with concurrency limit
