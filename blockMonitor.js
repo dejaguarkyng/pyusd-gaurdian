@@ -97,25 +97,39 @@ async function withRetry(fn, retryCount = 0) {
 
 // Process a single transaction
 async function processTransaction(tx, blockNumber) {
-  const to = tx.to ? tx.to.toLowerCase() : null;
-  const from = tx.from.toLowerCase();
-  const input = tx.data;
-  
-  // Check if transaction involves PYUSD
-  const involvesPYUSD = (
-    to === PYUSD_ADDRESS ||
-    from === PYUSD_ADDRESS ||
-    input.includes(PYUSD_ADDRESS.slice(2))
-  );
-  
-  if (!involvesPYUSD) return;
-  
-  logger.info(`PYUSD-related TX found`, { txHash: tx.hash, blockNumber });
-  
   try {
-    const trace = await withRetry(() => getTransactionTrace(tx.hash));
+    // Add defensive checks for all properties
+    if (!tx) {
+      logger.warn(`Null or undefined transaction received`, { blockNumber });
+      return;
+    }
+    
+    // Safely access transaction properties with fallbacks
+    const txHash = tx.hash || '0x0';
+    const to = tx.to ? String(tx.to).toLowerCase() : null;
+    const from = tx.from ? String(tx.from).toLowerCase() : null;
+    const input = tx.data || tx.input || '';
+    
+    // Skip if transaction doesn't have required fields
+    if (!from) {
+      logger.warn(`Transaction missing 'from' field, skipping`, { txHash, blockNumber });
+      return;
+    }
+    
+    // Check if transaction involves PYUSD
+    const involvesPYUSD = (
+      to === PYUSD_ADDRESS ||
+      from === PYUSD_ADDRESS ||
+      (typeof input === 'string' && input.includes(PYUSD_ADDRESS.slice(2)))
+    );
+    
+    if (!involvesPYUSD) return;
+    
+    logger.info(`PYUSD-related TX found`, { txHash, blockNumber });
+    
+    const trace = await withRetry(() => getTransactionTrace(txHash));
     if (!trace) {
-      logger.warn(`No trace available for transaction`, { txHash: tx.hash });
+      logger.warn(`No trace available for transaction`, { txHash });
       return;
     }
     
@@ -124,13 +138,13 @@ async function processTransaction(tx, blockNumber) {
     
     if (report.flagged || complianceFlags.length > 0) {
       logger.warn(`Transaction flagged for compliance issues`, { 
-        txHash: tx.hash, 
+        txHash, 
         flags: complianceFlags.map(f => f.rule) 
       });
       
       for (const issue of complianceFlags) {
         const alert = {
-          txHash: tx.hash,
+          txHash,
           blockNumber,
           timestamp: new Date().toISOString(),
           rule: issue.rule,
@@ -142,7 +156,7 @@ async function processTransaction(tx, blockNumber) {
         try {
           await saveAlert(alert);
         } catch (err) {
-          logger.error('Failed to save alert to database', { error: err.message, txHash: tx.hash });
+          logger.error('Failed to save alert to database', { error: err.message, txHash });
         }
 
         // Notify WebSocket clients
@@ -150,27 +164,87 @@ async function processTransaction(tx, blockNumber) {
 
         // Execute external alerts in parallel but handle failures individually
         await Promise.allSettled([
-          pushToSheet(alert).catch(err => logger.error('Failed to push to sheet', { error: err.message, txHash: tx.hash })),
-          sendDiscordAlert(alert).catch(err => logger.error('Failed to send Discord alert', { error: err.message, txHash: tx.hash })),
-          sendEmailAlert(alert).catch(err => logger.error('Failed to send email alert', { error: err.message, txHash: tx.hash })),
+          pushToSheet(alert).catch(err => logger.error('Failed to push to sheet', { error: err.message, txHash })),
+          sendDiscordAlert(alert).catch(err => logger.error('Failed to send Discord alert', { error: err.message, txHash })),
+          sendEmailAlert(alert).catch(err => logger.error('Failed to send email alert', { error: err.message, txHash })),
         ]);
       }
     }
   } catch (error) {
-    logger.error(`Error processing transaction`, { txHash: tx.hash, error: error.message });
+    const txHash = tx && tx.hash ? tx.hash : 'unknown';
+    logger.error(`Error processing transaction`, { txHash, error: error.message });
   }
 }
 
-// Process a single block
-async function processBlock(blockNumber) {
+// Safely get block transactions for cases where getBlock with transactions might fail
+async function getBlockTransactions(blockNumber) {
   try {
-    // Get block with transactions using ethers.js standard methods
-    const block = await withRetry(() => provider.getBlock(blockNumber, true));
-    logger.info(`Scanning block`, { blockNumber, txCount: block.transactions.length });
+    // First try to get the block with transactions
+    const block = await provider.getBlock(blockNumber, true);
+    if (!block) {
+      throw new Error(`No block returned for block number ${blockNumber}`);
+    }
+    return block.transactions || [];
+  } catch (error) {
+    logger.warn(`Failed to get block with transactions directly, trying alternative approach`, { 
+      blockNumber, 
+      error: error.message 
+    });
+    
+    // Fallback method: get transaction hashes, then fetch each transaction
+    try {
+      const block = await provider.getBlock(blockNumber);
+      if (!block || !block.transactions || !Array.isArray(block.transactions)) {
+        throw new Error('Invalid block data received');
+      }
+      
+      // Fetch each transaction by hash with proper error handling
+      const transactions = [];
+      for (const txHash of block.transactions) {
+        try {
+          const tx = await withRetry(() => provider.getTransaction(txHash));
+          if (tx) {
+            transactions.push(tx);
+          }
+        } catch (txError) {
+          logger.error(`Failed to fetch transaction`, { txHash, error: txError.message });
+          // Continue with other transactions
+        }
+      }
+      
+      return transactions;
+    } catch (fallbackError) {
+      logger.error(`Fallback method to get transactions also failed`, { 
+        blockNumber, 
+        error: fallbackError.message 
+      });
+      throw fallbackError;
+    }
+  }
+}
 
-    // Process transactions with concurrency limit
-    await Promise.all(
-      block.transactions.map(tx => limit(() => processTransaction(tx, blockNumber)))
+// Process a block using the safer transaction fetching method
+async function processBlockSafely(blockNumber) {
+  try {
+    logger.info(`Processing block`, { blockNumber });
+    
+    const transactions = await withRetry(() => getBlockTransactions(blockNumber));
+    logger.info(`Retrieved transactions`, { blockNumber, txCount: transactions.length });
+    
+    // Process each transaction individually with proper error handling
+    const results = await Promise.all(
+      transactions.map(tx => 
+        limit(() => 
+          processTransaction(tx, blockNumber)
+            .catch(error => {
+              logger.error(`Failed to process transaction`, { 
+                txHash: tx?.hash || 'unknown',
+                error: error.message 
+              });
+              return false;
+            })
+        )
+      )
     );
     
     return true;
@@ -204,24 +278,30 @@ async function monitorBlocks() {
       for (let start = latestBlock + 1; start <= currentBlock; start += MAX_BLOCKS_PER_BATCH) {
         const end = Math.min(start + MAX_BLOCKS_PER_BATCH - 1, currentBlock);
         
-        // Process batch of blocks
-        const blockPromises = [];
+        // Process each block individually with proper error handling
+        let successfulBlocks = 0;
         for (let blockNumber = start; blockNumber <= end; blockNumber++) {
-          blockPromises.push(processBlock(blockNumber));
+          try {
+            const success = await processBlockSafely(blockNumber);
+            if (success) successfulBlocks++;
+          } catch (blockError) {
+            logger.error(`Failed to process block`, { 
+              blockNumber, 
+              error: blockError.message 
+            });
+          }
         }
         
-        const results = await Promise.all(blockPromises);
-        const successfulBlocks = results.filter(Boolean).length;
-        
-        if (successfulBlocks < results.length) {
+        if (successfulBlocks < (end - start + 1)) {
           logger.warn(`Some blocks failed to process`, { 
-            total: results.length, 
+            total: (end - start + 1), 
             successful: successfulBlocks 
           });
         }
+        
+        // Update latest block even if some blocks failed
+        latestBlock = end;
       }
-
-      latestBlock = currentBlock;
     }
   } catch (error) {
     logger.error(`Error during block monitoring`, { error: error.message });
@@ -267,6 +347,83 @@ app.get('/api/alerts/:txHash', async (req, res) => {
   }
 });
 
+
+app.post('/api/test-alert', async (req, res) => {
+  const fakeAlert = {
+    txHash: '0xdeadbeef',
+    blockNumber: 123456,
+    timestamp: new Date().toISOString(),
+    rule: 'manual-test',
+    details: 'This is a manual test alert',
+    riskReport: { flagged: true, issues: ['test-issue'] }
+  };
+
+  await saveAlert(fakeAlert);
+  notifyClients(fakeAlert);
+  await Promise.allSettled([
+    pushToSheet(fakeAlert),
+    sendDiscordAlert(fakeAlert),
+    sendEmailAlert(fakeAlert)
+  ]);
+
+  res.json({ status: 'Test alert pushed' });
+});
+
+
+
+// Extended API endpoint for debug information
+app.get('/api/debug/provider', async (req, res) => {
+  try {
+    // Get basic provider information without exposing sensitive details
+    const network = await provider.getNetwork();
+    const blockNumber = await provider.getBlockNumber();
+    
+    res.json({
+      network: {
+        name: network.name,
+        chainId: network.chainId
+      },
+      currentBlock: blockNumber,
+      connectionStatus: 'connected'
+    });
+  } catch (error) {
+    logger.error('Error fetching provider debug info', { error: error.message });
+    res.status(500).json({ error: error.message, status: 'disconnected' });
+  }
+});
+
+// Debug endpoint to check transaction format
+app.get('/api/debug/transaction/:blockNumber/:index', async (req, res) => {
+  try {
+    const blockNumber = parseInt(req.params.blockNumber);
+    const index = parseInt(req.params.index);
+    
+    const block = await provider.getBlock(blockNumber, true);
+    if (!block || !block.transactions || index >= block.transactions.length) {
+      return res.status(404).json({ error: 'Block or transaction not found' });
+    }
+    
+    const tx = block.transactions[index];
+    // Return a safe representation without sensitive data
+    res.json({
+      hash: tx.hash,
+      blockNumber: tx.blockNumber,
+      from: tx.from || null,
+      to: tx.to || null,
+      hasData: Boolean(tx.data || tx.input),
+      properties: Object.keys(tx)
+    });
+  } catch (error) {
+    logger.error('Error fetching transaction debug info', { error: error.message });
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
 // WebSocket connections
 io.on('connection', (socket) => {
   logger.info('Client connected', { socketId: socket.id });
@@ -293,12 +450,26 @@ process.on('SIGTERM', () => {
 
 process.on('uncaughtException', (error) => {
   logger.error('Uncaught exception', { error: error.message, stack: error.stack });
-  process.exit(1);
+  // Don't exit on all uncaught exceptions - try to keep the service running
+  // Only exit if it's a critical error
+  if (error.message.includes('ECONNREFUSED') || error.message.includes('Invalid RPC response')) {
+    logger.error('Critical error detected, exiting process', { error: error.message });
+    process.exit(1);
+  }
 });
 
 // Start server and monitoring
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
   logger.info(`PYUSD Monitor API server running on port ${PORT}`);
-  logger.info('PYUSD Transaction Monitor starting');
-  monitorBlocks();
+  
+  // Test provider connection before starting monitoring
+  try {
+    const blockNumber = await provider.getBlockNumber();
+    logger.info(`Successfully connected to Ethereum node`, { blockNumber });
+    logger.info('PYUSD Transaction Monitor starting');
+    monitorBlocks();
+  } catch (error) {
+    logger.error(`Failed to connect to Ethereum node. Please check your RPC_URL`, { error: error.message });
+    process.exit(1);
+  }
 });

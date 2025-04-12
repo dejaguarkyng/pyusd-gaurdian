@@ -1,7 +1,6 @@
 import { ethers } from 'ethers';
 
-// You’ll import this same provider from your main file
-import { provider } from './provider.js'; // separate clean provider config
+import { provider } from './provider.js'; 
 
 /**
  * Sends a raw RPC call to GCP Ethereum node for debug_traceTransaction

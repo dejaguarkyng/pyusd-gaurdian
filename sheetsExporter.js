@@ -5,7 +5,7 @@ import fs from 'fs';
 config();
 
 const auth = new google.auth.GoogleAuth({
-  keyFile: process.env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH, // JSON key file
+  keyFile: process.env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH, 
   scopes: ['https://www.googleapis.com/auth/spreadsheets'],
 });
 
@@ -25,7 +25,7 @@ export async function pushToSheet(alertData) {
 
     await sheets.spreadsheets.values.append({
       spreadsheetId: SPREADSHEET_ID,
-      range: 'Alerts!A1', // assumes there's a sheet named "Alerts"
+      range: 'Alerts!A1', 
       valueInputOption: 'RAW',
       insertDataOption: 'INSERT_ROWS',
       requestBody: { values },

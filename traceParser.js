@@ -1,4 +1,3 @@
-// traceParser.js
 
 const riskyOpcodes = new Set([
     'DELEGATECALL',
@@ -9,7 +8,6 @@ const riskyOpcodes = new Set([
   ]);
   
   /**
-   * Analyze a transaction trace for anomalies and compliance risks
    * @param {object} trace - The result from debug_traceTransaction
    * @returns {object} risk report
    */
