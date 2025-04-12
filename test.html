@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PYUSD Guardian</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Socket.IO Client -->
+  <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        fontFamily: {
+          'sans': ['Poppins', 'sans-serif'],
+          'serif': ['Playfair Display', 'serif'],
+        },
+        extend: {
+          colors: {
+            gold: {
+              50: '#FFF9E5',
+              100: '#FFF0BF',
+              200: '#FFE380',
+              300: '#FFD740',
+              400: '#FFC700',
+              500: '#F2B200',
+              600: '#D69E00',
+              700: '#B38600',
+              800: '#8F6B00',
+              900: '#6B5000',
+            },
+            dark: {
+              800: '#1E1E1E',
+              900: '#121212',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style type="text/tailwind">
+    @layer components {
+      .gold-gradient {
+        @apply bg-gradient-to-r from-gold-400 to-gold-600;
+      }
+      .gold-text {
+        @apply text-transparent bg-clip-text gold-gradient;
+      }
+      .gold-border {
+        @apply border-gold-400;
+      }
+      .card {
+        @apply dark:bg-dark-800 bg-white rounded-lg border dark:border-gold-800/30 border-gold-300/50 shadow-lg overflow-hidden;
+      }
+      .card-header {
+        @apply px-6 py-4 border-b dark:border-gold-800/30 border-gold-300/50 dark:bg-dark-900/50 bg-gold-50;
+      }
+      .btn-gold {
+        @apply gold-gradient dark:text-dark-900 text-white font-medium px-4 py-2 rounded-md hover:shadow-md transition-all;
+      }
+      .btn-dark {
+        @apply dark:bg-dark-900 bg-white text-gold-600 border dark:border-gold-700/30 border-gold-300 px-4 py-2 rounded-md hover:border-gold-400 transition-all;
+      }
+      .theme-toggle {
+        @apply w-10 h-10 rounded-full flex items-center justify-center cursor-pointer;
+      }
+    }
+  </style>
+</head>
+<body class="dark:bg-dark-900 bg-gray-50 dark:text-white text-gray-800 font-sans">
+  <div class="min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="dark:border-b dark:border-gold-800/30 border-b border-gold-300/50 py-4 dark:bg-dark-800 bg-white">
+      <div class="container mx-auto px-6 flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+          <div class="gold-gradient w-10 h-10 rounded-full flex items-center justify-center shadow-lg">
+            <i class="fas fa-shield-alt dark:text-dark-900 text-white text-lg"></i>
+          </div>
+          <h1 class="font-serif text-2xl font-bold gold-text">PYUSD Guardian</h1>
+        </div>
+        <div class="flex items-center space-x-6">
+          <div id="connection-status" class="flex items-center space-x-2">
+            <span class="h-2 w-2 bg-yellow-500 rounded-full"></span>
+            <span class="text-sm dark:text-gold-200 text-gold-700">Connecting...</span>
+          </div>
+          <div id="theme-toggle" class="theme-toggle dark:bg-gold-400/10 bg-gold-100 dark:text-gold-300 text-gold-600">
+            <i id="theme-icon" class="fas fa-sun"></i>
+          </div>
+          <button id="refresh-btn" class="btn-gold">
+            <i class="fas fa-sync-alt mr-2"></i>Refresh
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 container mx-auto px-6 py-8">
+      <!-- Stats -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="card p-6">
+          <p class="text-sm dark:text-gold-300 text-gold-700 mb-1">Current Block</p>
+          <p id="current-block" class="text-2xl font-bold gold-text">-</p>
+        </div>
+        <div class="card p-6">
+          <p class="text-sm dark:text-gold-300 text-gold-700 mb-1">Transactions</p>
+          <p id="pyusd-tx-count" class="text-2xl font-bold gold-text">-</p>
+        </div>
+        <div class="card p-6">
+          <p class="text-sm dark:text-gold-300 text-gold-700 mb-1">Flagged</p>
+          <p id="flagged-tx-count" class="text-2xl font-bold text-red-500">-</p>
+        </div>
+        <div class="card p-6">
+          <p class="text-sm dark:text-gold-300 text-gold-700 mb-1">Monitoring Since</p>
+          <p id="monitoring-since" class="text-2xl font-bold gold-text">-</p>
+        </div>
+      </div>
+
+      <!-- Transaction Monitor -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Transaction List -->
+        <div class="lg:col-span-2">
+          <div class="card">
+            <div class="card-header flex justify-between items-center">
+              <h2 class="font-serif text-xl gold-text">Transactions</h2>
+              <select id="tx-filter" class="dark:bg-dark-900 bg-white dark:text-gold-200 text-gold-700 text-sm rounded-md px-3 py-2 border dark:border-gold-700/30 border-gold-300 focus:border-gold-400 focus:outline-none">
+                <option value="all">All Transactions</option>
+                <option value="flagged">Flagged Only</option>
+              </select>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y dark:divide-gold-800/30 divide-gold-300/50">
+                <thead class="dark:bg-dark-900/50 bg-gold-50/50">
+                  <tr>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-medium dark:text-gold-300 text-gold-700 uppercase tracking-wider">Transaction Hash</th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-medium dark:text-gold-300 text-gold-700 uppercase tracking-wider">Block</th>
+                    <th scope="col" class="px-6 py-4 text-left text-xs font-medium dark:text-gold-300 text-gold-700 uppercase tracking-wider">Status</th>
+                    <th scope="col" class="px-6 py-4 text-right text-xs font-medium dark:text-gold-300 text-gold-700 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="tx-table-body" class="divide-y dark:divide-gold-800/30 divide-gold-300/50">
+                  <!-- Transactions will be inserted here -->
+                  <tr>
+                    <td colspan="4" class="px-6 py-10 text-center dark:text-gold-200/50 text-gold-700/50">
+                      <div class="flex flex-col items-center justify-center">
+                        <i class="fas fa-circle-notch fa-spin mb-3 text-2xl dark:text-gold-400/30 text-gold-400/70"></i>
+                        <p>Loading transactions...</p>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alerts -->
+        <div class="lg:col-span-1">
+          <div class="card h-full">
+            <div class="card-header">
+              <h2 class="font-serif text-xl gold-text">Alerts</h2>
+            </div>
+            <div id="alerts-container" class="overflow-y-auto" style="max-height: 600px;">
+              <!-- Alerts will be inserted here -->
+              <div class="px-6 py-10 text-center dark:text-gold-200/50 text-gold-700/50">
+                <div class="flex flex-col items-center justify-center">
+                  <i class="fas fa-circle-notch fa-spin mb-3 text-2xl dark:text-gold-400/30 text-gold-400/70"></i>
+                  <p>Loading alerts...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Transaction Details Modal -->
+  <div id="tx-modal" class="fixed inset-0 dark:bg-black/80 bg-black/50 backdrop-blur-sm flex items-center justify-center hidden z-50">
+    <div class="dark:bg-dark-800 bg-white rounded-lg border dark:border-gold-700/50 border-gold-300/50 max-w-3xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+      <div class="flex justify-between items-center px-6 py-4 border-b dark:border-gold-800/30 border-gold-300/50">
+        <h3 class="font-serif text-xl gold-text">Transaction Details</h3>
+        <button id="close-modal" class="dark:text-gold-300 text-gold-600 hover:text-gold-400">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="p-6">
+        <div id="tx-details-content">
+          <!-- Transaction details will be inserted here -->
+          <div class="flex justify-center items-center py-10">
+            <i class="fas fa-circle-notch fa-spin text-2xl dark:text-gold-400 text-gold-600 mr-3"></i>
+            <p>Loading transaction details...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Toast -->
+  <div id="error-toast" class="fixed bottom-4 right-4 bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg hidden">
+    <div class="flex items-center">
+      <i class="fas fa-exclamation-circle mr-2"></i>
+      <span id="error-message">An error occurred</span>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    // API Configuration
+    const API_BASE_URL = 'http://localhost:3000/api'; // Change to your actual API URL
+    const WS_URL = 'http://localhost:3000'; // Change to your actual WebSocket URL
+    
+    // PYUSD Contract Address
+    const PYUSD_ADDRESS = '0x6c3ea9036406852006290770b2e17e0e4f37f978';
+    
+    // App State
+    const appState = {
+      currentBlock: 0,
+      startTime: null,
+      transactions: [],
+      alerts: [],
+      socket: null,
+      connected: false
+    };
+
+    // Theme toggle functionality
+    const htmlElement = document.documentElement;
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeIcon = document.getElementById('theme-icon');
+    
+    // Check for saved theme preference or use the system preference
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') {
+      htmlElement.classList.remove('dark');
+      themeIcon.classList.remove('fa-sun');
+      themeIcon.classList.add('fa-moon');
+    } else if (savedTheme === 'dark') {
+      htmlElement.classList.add('dark');
+      themeIcon.classList.remove('fa-moon');
+      themeIcon.classList.add('fa-sun');
+    } else {
+      // If no saved preference, check system preference
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        htmlElement.classList.add('dark');
+        themeIcon.classList.remove('fa-moon');
+        themeIcon.classList.add('fa-sun');
+      } else {
+        htmlElement.classList.remove('dark');
+        themeIcon.classList.remove('fa-sun');
+        themeIcon.classList.add('fa-moon');
+      }
+    }
+    
+    // Toggle theme function
+    themeToggle.addEventListener('click', function() {
+      if (htmlElement.classList.contains('dark')) {
+        htmlElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+        themeIcon.classList.remove('fa-sun');
+        themeIcon.classList.add('fa-moon');
+      } else {
+        htmlElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+        themeIcon.classList.remove('fa-moon');
+        themeIcon.classList.add('fa-sun');
+      }
+    });
+
+    // DOM Elements
+    const connectionStatus = document.getElementById('connection-status');
+    const currentBlockEl = document.getElementById('current-block');
+    const pyusdTxCountEl = document.getElementById('pyusd-tx-count');
+    const flaggedTxCountEl = document.getElementById('flagged-tx-count');
+    const monitoringSinceEl = document.getElementById('monitoring-since');
+    const txTableBody = document.getElementById('tx-table-body');
+    const alertsContainer = document.getElementById('alerts-container');
+    const txFilter = document.getElementById('tx-filter');
+    const refreshBtn = document.getElementById('refresh-btn');
+    const txModal = document.getElementById('tx-modal');
+    const closeModal = document.getElementById('close-modal');
+    const txDetailsContent = document.getElementById('tx-details-content');
+    const errorToast = document.getElementById('error-toast');
+    const errorMessage = document.getElementById('error-message');
+
+    // Helper function to show error toast
+    function showError(message) {
+      errorMessage.textContent = message;
+      errorToast.classList.remove('hidden');
+      setTimeout(() => {
+        errorToast.classList.add('hidden');
+      }, 5000);
+    }
+
+    // Helper function for API calls with error handling
+    async function fetchAPI(endpoint, options = {}) {
+      try {
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `API error: ${response.status}`);
+        }
+        return await response.json();
+      } catch (error) {
+        showError(`Failed to fetch data: ${error.message}`);
+        throw error;
+      }
+    }
+
+    // Initialize WebSocket connection
+    function initializeWebSocket() {
+      try {
+        appState.socket = io(WS_URL);
+        
+        appState.socket.on('connect', () => {
+          appState.connected = true;
+          updateConnectionStatus('connected');
+          console.log('WebSocket connected');
+        });
+        
+        appState.socket.on('disconnect', () => {
+          appState.connected = false;
+          updateConnectionStatus('disconnected');
+          console.log('WebSocket disconnected');
+        });
+        
+        appState.socket.on('connect_error', (error) => {
+          appState.connected = false;
+          updateConnectionStatus('error');
+          console.error('WebSocket connection error:', error);
+        });
+        
+        appState.socket.on('new-alert', (alert) => {
+          console.log('New alert received:', alert);
+          // Add to alerts and update UI
+          appState.alerts.unshift(alert);
+          // Keep only the last 50 alerts
+          if (appState.alerts.length > 50) {
+            appState.alerts.pop();
+          }
+          
+          // Create transaction object from alert
+          const tx = {
+            hash: alert.txHash,
+            blockNumber: alert.blockNumber,
+            flagged: true,
+            timestamp: new Date(alert.timestamp),
+            complianceFlags: [{
+              rule: alert.rule,
+              details: alert.details,
+              severity: getSeverityFromRule(alert.rule)
+            }]
+          };
+          
+          // Add to transactions if not already present
+          if (!appState.transactions.some(t => t.hash === tx.hash)) {
+            appState.transactions.unshift(tx);
+            // Keep only the last 100 transactions
+            if (appState.transactions.length > 100) {
+              appState.transactions.pop();
+            }
+          }
+          
+          // Update UI
+          updateStats();
+          renderTransactions();
+          renderAlerts();
+        });
+      } catch (error) {
+        console.error('Failed to initialize WebSocket:', error);
+        updateConnectionStatus('error');
+      }
+    }
+
+    // Update connection status indicator
+    function updateConnectionStatus(status) {
+      const statusDot = connectionStatus.querySelector('span:first-child');
+      const statusText = connectionStatus.querySelector('span:last-child');
+      
+      switch (status) {
+        case 'connected':
+          statusDot.className = 'h-2 w-2 bg-green-500 rounded-full';
+          statusText.textContent = 'Monitoring';
+          break;
+        case 'disconnected':
+          statusDot.className = 'h-2 w-2 bg-red-500 rounded-full';
+          statusText.textContent = 'Disconnected';
+          break;
+        case 'connecting':
+          statusDot.className = 'h-2 w-2 bg-yellow-500 rounded-full';
+          statusText.textContent = 'Connecting...';
+          break;
+        case 'error':
+          statusDot.className = 'h-2 w-2 bg-red-500 rounded-full';
+          statusText.textContent = 'Connection Error';
+          break;
+        default:
+          statusDot.className = 'h-2 w-2 bg-gray-500 rounded-full';
+          statusText.textContent = 'Unknown';
+      }
+    }
+
+    // Initialize the UI
+    async function initializeUI() {
+      updateConnectionStatus('connecting');
+      
+      try {
+        // Fetch initial status
+        const status = await fetchAPI('/status');
+        appState.currentBlock = status.currentBlock;
+        appState.startTime = new Date(Date.now() - (status.uptime * 1000));
+        
+        // Fetch alerts
+        const alerts = await fetchAPI('/alerts');
+        appState.alerts = alerts.data || [];
+        
+        // Create transactions from alerts
+        appState.transactions = appState.alerts.map(alert => ({
+          hash: alert.txHash,
+          blockNumber: alert.blockNumber,
+          flagged: true,
+          timestamp: new Date(alert.timestamp),
+          complianceFlags: [{
+            rule: alert.rule,
+            details: alert.details,
+            severity: getSeverityFromRule(alert.rule)
+          }]
+        }));
+        
+        // Update UI
+        updateStats();
+        renderTransactions();
+        renderAlerts();
+        
+        // Initialize WebSocket
+        initializeWebSocket();
+        
+        // Set up event listeners
+        setupEventListeners();
+      } catch (error) {
+        console.error('Failed to initialize UI:', error);
+        updateConnectionStatus('error');
+        
+        // Show empty states
+        txTableBody.innerHTML = `
+          <tr>
+            <td colspan="4" class="px-6 py-10 text-center dark:text-gold-200/50 text-gold-700/50">
+              <div class="flex flex-col items-center justify-center">
+                <i class="fas fa-exclamation-circle mb-3 text-2xl text-red-500"></i>
+                <p>Failed to load transactions</p>
+              </div>
+            </td>
+          </tr>
+        `;
+        
+        alertsContainer.innerHTML = `
+          <div class="px-6 py-10 text-center dark:text-gold-200/50 text-gold-700/50">
+            <div class="flex flex-col items-center justify-center">
+              <i class="fas fa-exclamation-circle mb-3 text-2xl text-red-500"></i>
+              <p>Failed to load alerts</p>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // Update dashboard statistics
+    function updateStats() {
+      currentBlockEl.textContent = appState.currentBlock.toLocaleString();
+      pyusdTxCountEl.textContent = appState.transactions.length;
+      flaggedTxCountEl.textContent = appState.transactions.filter(tx => tx.flagged).length;
+      
+      if (appState.startTime) {
+        monitoringSinceEl.textContent = formatDate(appState.startTime).split(',')[0];
+      } else {
+        monitoringSinceEl.textContent = '-';
+      }
+    }
+
+    // Render transaction table
+    function renderTransactions() {
+      // Filter transactions if needed
+      const filteredTxs = txFilter.value === 'flagged' 
+        ? appState.transactions.filter(tx => tx.flagged)
+        : appState.transactions;
+      
+      if (filteredTxs.length === 0) {
+        txTableBody.innerHTML = `
+          <tr>
+            <td colspan="4" class="px-6 py-10 text-center dark:text-gold-200/50 text-gold-700/50">
+              <div class="flex flex-col items-center justify-center">
+                <i class="fas fa-search mb-3 text-2xl dark:text-gold-400/30 text-gold-400/70"></i>
+                <p>No transactions to display</p>
+              </div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      // Sort by block number (descending)
+      const sortedTxs = [...filteredTxs].sort((a, b) => b.blockNumber - a.blockNumber);
+      
+      // Generate table rows
+      txTableBody.innerHTML = sortedTxs.map(tx => `
+        <tr class="${tx.flagged ? 'dark:bg-red-900/10 bg-red-50' : ''}">
+          <td class="px-6 py-4">
+            <div class="font-mono text-sm truncate max-w-[150px] dark:text-gold-100 text-gray-800" title="${tx.hash}">
+              ${tx.hash.substring(0, 10)}...
+            </div>
+          </td>
+          <td class="px-6 py-4">
+            <div class="text-sm dark:text-gold-100 text-gray-800">${tx.blockNumber.toLocaleString()}</div>
+          </td>
+          <td class="px-6 py-4">
+            <span class="px-2 py-1 text-xs rounded-full ${tx.flagged ? 'dark:bg-red-500/20 bg-red-100 text-red-500 border dark:border-red-500/30 border-red-200' : 'dark:bg-green-500/20 bg-green-100 text-green-600 border dark:border-green-500/30 border-green-200'}">
+              ${tx.flagged ? 'Flagged' : 'Compliant'}
+            </span>
+          </td>
+          <td class="px-6 py-4 text-right">
+            <button class="dark:text-gold-400 text-gold-600 hover:text-gold-500 text-sm view-tx" data-hash="${tx.hash}">
+              View Details
+            </button>
+          </td>
+        </tr>
+      `).join('');
+
+      // Add event listeners to view buttons
+      document.querySelectorAll('.view-tx').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const hash = btn.getAttribute('data-hash');
+          showTransactionDetails(hash);
+        });
+      });
+    }
+
+    // Render alerts
+    function renderAlerts() {
+      if (appState.alerts.length === 0) {
+        alertsContainer.innerHTML = `
+          <div class="px-6 py-10 text-center dark:text-gold-200/50 text-gold-700/50">
+            <div class="flex flex-col items-center justify-center">
+              <i class="fas fa-bell-slash mb-3 text-2xl dark:text-gold-400/30 text-gold-400/70"></i>
+              <p>No alerts to display</p>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // Sort alerts by timestamp (newest first)
+      const sortedAlerts = [...appState.alerts].sort((a, b) => 
+        new Date(b.timestamp) - new Date(a.timestamp)
+      );
+      
+      alertsContainer.innerHTML = sortedAlerts.map(alert => {
+        const severity = getSeverityFromRule(alert.rule);
+        return `
+          <div class="border-b dark:border-gold-800/30 border-gold-300/50 p-4 dark:hover:bg-dark-900/30 hover:bg-gold-50">
+            <div class="flex justify-between items-start">
+              <div class="flex items-start space-x-3">
+                <div class="mt-1">
+                  <i class="fas fa-exclamation-triangle ${getSeverityColor(severity)}"></i>
+                </div>
+                <div>
+                  <h3 class="font-medium dark:text-gold-100 text-gray-800">${alert.rule}</h3>
+                  <p class="text-sm dark:text-gold-200/70 text-gray-600 mt-1">${
+                    typeof alert.details === 'string' 
+                      ? alert.details 
+                      : JSON.stringify(alert.details).substring(0, 100) + '...'
+                  }</p>
+                </div>
+              </div>
+              <span class="text-xs dark:text-gold-300/50 text-gold-700/70">${formatTime(new Date(alert.timestamp))}</span>
+            </div>
+            <div class="mt-3 flex items-center justify-between">
+              <span class="text-xs px-2 py-1 rounded-full ${getSeverityBgColor(severity)}">
+                ${severity} Risk
+              </span>
+              <button class="dark:text-gold-400 text-gold-600 hover:text-gold-500 text-xs view-tx" data-hash="${alert.txHash}">
+                View Transaction
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Add event listeners to view buttons in alerts
+      alertsContainer.querySelectorAll('.view-tx').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const hash = btn.getAttribute('data-hash');
+          showTransactionDetails(hash);
+        });
+      });
+    }
+
+    // Show transaction details in modal
+    async function showTransactionDetails(hash) {
+      txModal.classList.remove('hidden');
+      txDetailsContent.innerHTML = `
+        <div class="flex justify-center items-center py-10">
+          <i class="fas fa-circle-notch fa-spin text-2xl dark:text-gold-400 text-gold-600 mr-3"></i>
+          <p>Loading transaction details...</p>
+        </div>
+      `;
+      
+      try {
+        // Find transaction in local state first
+        let tx = appState.transactions.find(t => t.hash === hash);
+        
+        // If not found or we need more details, fetch from API
+        if (!tx || !tx.details) {
+          const alertData = await fetchAPI(`/alerts/${hash}`);
+          
+          // Create or update transaction object
+          tx = {
+            hash: alertData.txHash,
+            blockNumber: alertData.blockNumber,
+            flagged: true,
+            timestamp: new Date(alertData.timestamp),
+            from: alertData.riskReport?.from || 'Unknown',
+            to: alertData.riskReport?.to || 'Unknown',
+            method: alertData.riskReport?.method || 'Unknown',
+            value: alertData.riskReport?.value || 0,
+            gasUsed: alertData.riskReport?.gasUsed || 0,
+            complianceFlags: [{
+              rule: alertData.rule,
+              details: alertData.details,
+              severity: getSeverityFromRule(alertData.rule)
+            }],
+            riskReport: alertData.riskReport
+          };
+          
+          // Update in our local state
+          const existingIndex = appState.transactions.findIndex(t => t.hash === hash);
+          if (existingIndex >= 0) {
+            appState.transactions[existingIndex] = tx;
+          }
+        }
+        
+        // Create a trace example from the risk report if available
+        const trace = tx.riskReport?.trace || {
+          calls: [
+            {
+              type: "CALL",
+              from: tx.from || "0x0000000000000000000000000000000000000000",
+              to: tx.to || "0x0000000000000000000000000000000000000000",
+              value: "0x0",
+              gas: "0x" + Math.floor(Math.random() * 100000).toString(16),
+              input: "0xa9059cbb000000000000000000000000d8da6bf26964af9d7eed9e03e53415d37aa96045000000000000000000000000000000000000000000000000000000003b9aca00"
+            }
+          ]
+        };
+
+        txDetailsContent.innerHTML = `
+          <div class="space-y-6">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-3">
+                <span class="px-2 py-1 text-xs rounded-full ${tx.flagged ? 'dark:bg-red-500/20 bg-red-100 text-red-500 border dark:border-red-500/30 border-red-200' : 'dark:bg-green-500/20 bg-green-100 text-green-600 border dark:border-green-500/30 border-green-200'}">
+                  ${tx.flagged ? 'Flagged' : 'Compliant'}
+                </span>
+                <span class="text-sm dark:text-gold-300 text-gold-700">Block #${tx.blockNumber.toLocaleString()}</span>
+              </div>
+              <a href="https://etherscan.io/tx/${tx.hash}" target="_blank" class="dark:text-gold-400 text-gold-600 hover:text-gold-500 text-sm flex items-center">
+                View on Etherscan
+                <i class="fas fa-external-link-alt ml-1"></i>
+              </a>
+            </div>
+
+            <div>
+              <h4 class="text-sm dark:text-gold-300 text-gold-700 mb-2">Transaction Hash</h4>
+              <div class="dark:bg-dark-900 bg-gold-50 p-3 rounded-md border dark:border-gold-800/30 border-gold-300/50">
+                <p class="text-sm font-mono break-all dark:text-gold-100 text-gray-800">${tx.hash}</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <h4 class="text-sm dark:text-gold-300 text-gold-700 mb-2">From</h4>
+                <div class="dark:bg-dark-900 bg-gold-50 p-3 rounded-md border dark:border-gold-800/30 border-gold-300/50">
+                  <p class="text-sm font-mono break-all dark:text-gold-100 text-gray-800">${tx.from || 'Unknown'}</p>
+                </div>
+              </div>
+              <div>
+                <h4 class="text-sm dark:text-gold-300 text-gold-700 mb-2">To</h4>
+                <div class="dark:bg-dark-900 bg-gold-50 p-3 rounded-md border dark:border-gold-800/30 border-gold-300/50">
+                  <p class="text-sm font-mono break-all dark:text-gold-100 text-gray-800">${tx.to || 'Unknown'}</p>
+                  ${tx.to && tx.to.toLowerCase() === PYUSD_ADDRESS.toLowerCase() ? 
+                    '<span class="text-xs dark:text-gold-400 text-gold-600 mt-1 block">PYUSD Contract</span>' : ''}
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <h4 class="text-sm dark:text-gold-300 text-gold-700 mb-2">Method</h4>
+                <div class="dark:bg-dark-900 bg-gold-50 p-3 rounded-md border dark:border-gold-800/30 border-gold-300/50">
+                  <p class="text-sm dark:text-gold-100 text-gray-800">${tx.method || 'Unknown'}${tx.method ? '()' : ''}</p>
+                </div>
+              </div>
+              <div>
+                <h4 class="text-sm dark:text-gold-300 text-gold-700 mb-2">Value</h4>
+                <div class="dark:bg-dark-900 bg-gold-50 p-3 rounded-md border dark:border-gold-800/30 border-gold-300/50">
+                  <p class="text-sm dark:text-gold-100 text-gray-800">${tx.value || 0} PYUSD</p>
+                </div>
+              </div>
+              <div>
+                <h4 class="text-sm dark:text-gold-300 text-gold-700 mb-2">Gas Used</h4>
+                <div class="dark:bg-dark-900 bg-gold-50 p-3 rounded-md border dark:border-gold-800/30 border-gold-300/50">
+                  <p class="text-sm dark:text-gold-100 text-gray-800">${tx.gasUsed ? tx.gasUsed.toLocaleString() : 'Unknown'}</p>
+                </div>
+              </div>
+            </div>
+
+            ${tx.flagged && tx.complianceFlags && tx.complianceFlags.length > 0 ? `
+              <div class="border-t dark:border-gold-800/30 border-gold-300/50 pt-6 mt-6">
+                <h4 class="font-serif text-lg gold-text mb-4">Compliance Flags</h4>
+                ${tx.complianceFlags.map(flag => `
+                  <div class="dark:bg-dark-900 bg-gold-50 rounded-md border dark:border-gold-800/30 border-gold-300/50 p-4 mb-3">
+                    <div class="flex items-start">
+                      <div class="flex-shrink-0 mr-3 mt-1">
+                        <i class="fas fa-exclamation-triangle ${getSeverityColor(flag.severity)}"></i>
+                      </div>
+                      <div class="flex-1">
+                        <h3 class="text-sm font-medium dark:text-gold-100 text-gray-800">${flag.rule}</h3>
+                        <div class="mt-2 text-sm dark:text-gold-200/70 text-gray-600">
+                          <p>${typeof flag.details === 'string' ? flag.details : JSON.stringify(flag.details, null, 2)}</p>
+                        </div>
+                        <div class="mt-3">
+                          <span class="px-2 py-1 text-xs rounded-full ${getSeverityBgColor(flag.severity)}">
+                            ${flag.severity} Risk
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+
+            <div class="border-t dark:border-gold-800/30 border-gold-300/50 pt-6 mt-6">
+              <h4 class="font-serif text-lg gold-text mb-4">Transaction Trace</h4>
+              <div class="dark:bg-dark-900 bg-gold-50 p-4 rounded-md border dark:border-gold-800/30 border-gold-300/50 overflow-x-auto">
+                <pre class="text-xs font-mono dark:text-gold-100/80 text-gray-800">${JSON.stringify(trace, null, 2)}</pre>
+              </div>
+            </div>
+          </div>
+        `;
+      } catch (error) {
+        console.error('Error fetching transaction details:', error);
+        txDetailsContent.innerHTML = `
+          <div class="flex flex-col items-center justify-center py-10 text-center">
+            <i class="fas fa-exclamation-circle text-3xl text-red-500 mb-4"></i>
+            <p class="text-lg dark:text-gold-100 text-gray-800 mb-2">Failed to load transaction details</p>
+            <p class="text-sm dark:text-gold-200/70 text-gray-600">${error.message || 'An unknown error occurred'}</p>
+          </div>
+        `;
+      }
+    }
+
+    // Helper function to get severity from rule name
+    function getSeverityFromRule(rule) {
+      // This is a simple example - you may want to implement more sophisticated logic
+      if (rule.includes('Blacklisted') || rule.includes('Suspicious')) {
+        return 'High';
+      } else if (rule.includes('Large')) {
+        return 'Medium';
+      } else {
+        return 'Low';
+      }
+    }
+
+    // Helper function to get severity color
+    function getSeverityColor(severity) {
+      switch (severity) {
+        case 'High':
+          return 'dark:text-red-400 text-red-500';
+        case 'Medium':
+          return 'dark:text-amber-400 text-amber-500';
+        case 'Low':
+          return 'dark:text-blue-400 text-blue-500';
+        default:
+          return 'dark:text-gold-400 text-gold-600';
+      }
+    }
+
+    // Helper function to get severity background color
+    function getSeverityBgColor(severity) {
+      switch (severity) {
+        case 'High':
+          return 'dark:bg-red-500/20 bg-red-100 text-red-500 border dark:border-red-500/30 border-red-200';
+        case 'Medium':
+          return 'dark:bg-amber-500/20 bg-amber-100 text-amber-500 border dark:border-amber-500/30 border-amber-200';
+        case 'Low':
+          return 'dark:bg-blue-500/20 bg-blue-100 text-blue-500 border dark:border-blue-500/30 border-blue-200';
+        default:
+          return 'dark:bg-gold-500/20 bg-gold-100 text-gold-600 border dark:border-gold-500/30 border-gold-200';
+      }
+    }
+
+    // Set up event listeners
+    function setupEventListeners() {
+      // Close modal
+      closeModal.addEventListener('click', () => {
+        txModal.classList.add('hidden');
+      });
+
+      // Close modal when clicking outside
+      txModal.addEventListener('click', (e) => {
+        if (e.target === txModal) {
+          txModal.classList.add('hidden');
+        }
+      });
+
+      // Filter transactions
+      txFilter.addEventListener('change', renderTransactions);
+
+      // Refresh button
+      refreshBtn.addEventListener('click', async () => {
+        // Show refreshing state
+        refreshBtn.disabled = true;
+        refreshBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i>Refreshing...';
+
+        try {
+          // Fetch latest status
+          const status = await fetchAPI('/status');
+          appState.currentBlock = status.currentBlock;
+          
+          // Fetch latest alerts
+          const alerts = await fetchAPI('/alerts');
+          appState.alerts = alerts.data || [];
+          
+          // Update transactions from alerts
+          const newTransactions = appState.alerts
+            .filter(alert => !appState.transactions.some(tx => tx.hash === alert.txHash))
+            .map(alert => ({
+              hash: alert.txHash,
+              blockNumber: alert.blockNumber,
+              flagged: true,
+              timestamp: new Date(alert.timestamp),
+              complianceFlags: [{
+                rule: alert.rule,
+                details: alert.details,
+                severity: getSeverityFromRule(alert.rule)
+              }]
+            }));
+          
+          // Add new transactions to the list
+          appState.transactions = [...newTransactions, ...appState.transactions];
+          
+          // Update UI
+          updateStats();
+          renderTransactions();
+          renderAlerts();
+        } catch (error) {
+          console.error('Error refreshing data:', error);
+          showError('Failed to refresh data: ' + error.message);
+        } finally {
+          // Reset button
+          refreshBtn.disabled = false;
+          refreshBtn.innerHTML = '<i class="fas fa-sync-alt mr-2"></i>Refresh';
+        }
+      });
+    }
+
+    // Helper function to format date
+    function formatDate(date) {
+      return new Date(date).toLocaleString();
+    }
+
+    // Helper function to format time
+    function formatTime(date) {
+      return new Date(date).toLocaleTimeString();
+    }
+
+    // Initialize the application
+    document.addEventListener('DOMContentLoaded', initializeUI);
+  </script>
+</body>
+</html>
