@@ -9,6 +9,11 @@ import { sendDiscordAlert } from './discordNotifier.js';
 import { sendEmailAlert } from './emailNotifier.js';
 import pLimit from 'p-limit';
 import winston from 'winston';
+import express from 'express';
+import http from 'http';
+import cors from 'cors';
+import { Server } from 'socket.io';
+import { saveAlert, getAlerts, getAlertByTxHash } from './database.js';
 
 // Load environment variables
 config();
@@ -21,6 +26,8 @@ const MAX_BLOCKS_PER_BATCH = parseInt(process.env.MAX_BLOCKS_PER_BATCH || '10');
 const MAX_CONCURRENT_TRACES = parseInt(process.env.MAX_CONCURRENT_TRACES || '5');
 const RETRY_DELAY_MS = parseInt(process.env.RETRY_DELAY_MS || '2000');
 const MAX_RETRIES = parseInt(process.env.MAX_RETRIES || '3');
+const PORT = process.env.PORT || 3000;
+const FRONTEND_URL = process.env.FRONTEND_URL || '*';
 
 // Setup logger
 const logger = winston.createLogger({
@@ -34,6 +41,20 @@ const logger = winston.createLogger({
     new winston.transports.File({ filename: 'pyusd-monitor.log' })
   ],
 });
+
+// Initialize Express and WebSocket server
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: FRONTEND_URL,
+    methods: ['GET', 'POST']
+  }
+});
+
+// Apply middleware
+app.use(cors());
+app.use(express.json());
 
 // Initialize provider with fallback and timeout
 let provider;
@@ -53,6 +74,12 @@ const limit = pLimit(MAX_CONCURRENT_TRACES);
 
 // Track latest scanned block
 let latestBlock = parseInt(process.env.STARTING_BLOCK || '0');
+
+// Helper function to notify clients via WebSocket
+function notifyClients(alert) {
+  io.emit('new-alert', alert);
+  logger.info('Sent alert to connected clients', { txHash: alert.txHash });
+}
 
 // Helper function with retry logic
 async function withRetry(fn, retryCount = 0) {
@@ -111,7 +138,17 @@ async function processTransaction(tx, blockNumber) {
           riskReport: report,
         };
 
-        // Execute alerts in parallel but handle failures individually
+        // Save to database
+        try {
+          await saveAlert(alert);
+        } catch (err) {
+          logger.error('Failed to save alert to database', { error: err.message, txHash: tx.hash });
+        }
+
+        // Notify WebSocket clients
+        notifyClients(alert);
+
+        // Execute external alerts in parallel but handle failures individually
         await Promise.allSettled([
           pushToSheet(alert).catch(err => logger.error('Failed to push to sheet', { error: err.message, txHash: tx.hash })),
           sendDiscordAlert(alert).catch(err => logger.error('Failed to send Discord alert', { error: err.message, txHash: tx.hash })),
@@ -193,15 +230,64 @@ async function monitorBlocks() {
   }
 }
 
+// API Routes
+app.get('/api/status', (req, res) => {
+  res.json({
+    status: 'running',
+    currentBlock: latestBlock,
+    uptime: process.uptime()
+  });
+});
+
+app.get('/api/alerts', async (req, res) => {
+  try {
+    const { page = 1, limit = 20 } = req.query;
+    const alerts = await getAlerts(parseInt(page), parseInt(limit));
+    res.json(alerts);
+  } catch (error) {
+    logger.error('Error fetching alerts', { error: error.message });
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/alerts/:txHash', async (req, res) => {
+  try {
+    const { txHash } = req.params;
+    const alert = await getAlertByTxHash(txHash);
+    
+    if (!alert) {
+      return res.status(404).json({ error: 'Alert not found' });
+    }
+    
+    res.json(alert);
+  } catch (error) {
+    logger.error('Error fetching alert details', { error: error.message, txHash: req.params.txHash });
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// WebSocket connections
+io.on('connection', (socket) => {
+  logger.info('Client connected', { socketId: socket.id });
+  
+  socket.on('disconnect', () => {
+    logger.info('Client disconnected', { socketId: socket.id });
+  });
+});
+
 // Handle graceful shutdown
 process.on('SIGINT', () => {
   logger.info('Received SIGINT. Shutting down gracefully');
-  process.exit(0);
+  server.close(() => {
+    process.exit(0);
+  });
 });
 
 process.on('SIGTERM', () => {
   logger.info('Received SIGTERM. Shutting down gracefully');
-  process.exit(0);
+  server.close(() => {
+    process.exit(0);
+  });
 });
 
 process.on('uncaughtException', (error) => {
@@ -209,6 +295,9 @@ process.on('uncaughtException', (error) => {
   process.exit(1);
 });
 
-// Start monitoring
-logger.info('PYUSD Transaction Monitor starting');
-monitorBlocks();
+// Start server and monitoring
+server.listen(PORT, () => {
+  logger.info(`PYUSD Monitor API server running on port ${PORT}`);
+  logger.info('PYUSD Transaction Monitor starting');
+  monitorBlocks();
+});
