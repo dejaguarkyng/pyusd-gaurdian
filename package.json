@@ -1,0 +1,19 @@
+{
+  "name": "pyusd-gaurdian",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dejaguarkyng/pyusd-gaurdian.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dejaguarkyng/pyusd-gaurdian/issues"
+  },
+  "homepage": "https://github.com/dejaguarkyng/pyusd-gaurdian#readme"
+}
