@@ -4,12 +4,13 @@ import { config } from 'dotenv';
 config();
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'mail.tokenated.com',  // Your mail server hostname
+  port: 587,                       // Common port for SMTP with TLS (or use 465 for SSL)
+  secure: false,                   // true for 465, false for other ports
   auth: {
     user: process.env.EMAIL_FROM,
     pass: process.env.EMAIL_PASSWORD,
   },
-  // Add optional security settings
   tls: {
     rejectUnauthorized: true
   }
