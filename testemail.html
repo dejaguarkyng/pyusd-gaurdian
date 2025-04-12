@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PYUSD Guardian Alert</title>
+</head>
+<body style="font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #29231c; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+  <div style="border-radius: 8px; border: 1px solid #F5DEB3; overflow: hidden; box-shadow: 0 4px 15px rgba(184, 134, 11, 0.15);">
+    <!-- Alert Header -->
+    <div style="background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%); padding: 20px; color: #FFFFFF;">
+      <table width="100%" border="0" cellpadding="0" cellspacing="0">
+        <tr>
+          <td>
+            <h1 style="margin: 0; font-size: 24px; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">PYUSD Guardian Alert</h1>
+            <p style="margin: 5px 0 0; font-size: 14px;">Alert generated at April 12, 2025, 10:35:22 AM</p>
+          </td>
+          <td align="right">
+            <div style="font-size: 28px; width: 50px; height: 50px; line-height: 50px; text-align: center; background-color: rgba(255,255,255,0.2); border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">🛡️</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    
+    <!-- Alert Content -->
+    <div style="padding: 25px; background-color: #FFFAEB;">
+      <!-- Alert Summary -->
+      <div style="background: linear-gradient(to right, #F5DEB310, #F5DEB340); border-left: 4px solid #D4AF37; border-radius: 6px; padding: 20px; margin-bottom: 25px;">
+        <h2 style="margin-top: 0; margin-bottom: 15px; color: #0C2340; font-size: 18px;">Alert Summary</h2>
+        <div style="display: flex; flex-wrap: wrap; gap: 15px;">
+          <div style="flex: 1; min-width: 200px;">
+            <p><strong>Rule Violated:</strong><br> <span style="color: #B8860B; font-weight: 600;">Large Transaction Volume</span></p>
+            <p><strong>Severity:</strong><br> 
+              <span style="display: inline-block; background-color: #F57C00; color: white; padding: 3px 10px; border-radius: 4px; font-weight: bold;">
+                HIGH
+              </span>
+            </p>
+          </div>
+          <div style="flex: 1; min-width: 200px;">
+            <p><strong>Transaction:</strong><br>
+              <a href="https://etherscan.io/tx/0x3d4bfa03c120ca82d56bb596589c513e878e394f2a9394c1b692d3841c776e95" style="color: #B8860B; text-decoration: none; word-break: break-all; font-family: monospace; font-size: 14px; background-color: rgba(212, 175, 55, 0.1); padding: 2px 6px; border-radius: 3px;">
+                0x3d4bfa03...776e95
+              </a>
+            </p>
+            <p><strong>Block:</strong><br> <span style="font-family: monospace; font-size: 14px;">18947623</span></p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Transaction Details -->
+      <div style="margin-bottom: 25px;">
+        <h3 style="margin-bottom: 12px; border-bottom: 2px solid #F5DEB3; padding-bottom: 8px; color: #B8860B;">Alert Details</h3>
+        <div style="background-color: white; border-radius: 6px; padding: 15px; box-shadow: 0 1px 3px rgba(184, 134, 11, 0.1);">
+          <p style="white-space: pre-line; margin: 0;">Unusually large PYUSD transaction detected. This transaction involves a transfer of 5,000,000 PYUSD tokens, which is significantly above the typical transaction volume. This may indicate potential market manipulation or institutional movement requiring further investigation.</p>
+        </div>
+      </div>
+      
+      <!-- Wallet Addresses Section -->
+      <div style="background-color: white; border-radius: 6px; padding: 15px; margin-bottom: 25px; box-shadow: 0 1px 3px rgba(184, 134, 11, 0.1);">
+        <div style="margin-bottom: 20px;">
+          <h3 style="margin-bottom: 10px; border-bottom: 1px solid #F5DEB3; padding-bottom: 5px; color: #B8860B;">Key Addresses</h3>
+          <div style="margin-bottom: 8px;">
+            <strong>From:</strong> 
+            <a href="https://etherscan.io/address/0x9472661f7d2b3b0db1b86105023c9bd4344d997e" style="color: #B8860B; text-decoration: none; word-break: break-all;">
+              0x9472661f7d2b3b0db1b86105023c9bd4344d997e
+            </a>
+          </div>
+          <div style="margin-bottom: 8px;">
+            <strong>To:</strong> 
+            <a href="https://etherscan.io/address/0x4b5307ec37562eb81d45e23862936bcb8836b1db" style="color: #B8860B; text-decoration: none; word-break: break-all;">
+              0x4b5307ec37562eb81d45e23862936bcb8836b1db
+            </a>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Risk Report -->
+      <div style="margin-top: 25px;">
+        <h3 style="margin-bottom: 12px; border-bottom: 2px solid #F5DEB3; padding-bottom: 8px; color: #B8860B;">Risk Report</h3>
+        <pre style="background: white; border: 1px solid #F5DEB3; border-radius: 6px; padding: 15px; overflow-x: auto; font-size: 13px; line-height: 1.5; margin: 0; box-shadow: 0 1px 3px rgba(184, 134, 11, 0.1);">{
+  "transactionId": "0x3d4bfa03c120ca82d56bb596589c513e878e394f2a9394c1b692d3841c776e95",
+  "timestamp": "2025-04-12T10:32:14Z",
+  "blockNumber": 18947623,
+  "fromAddress": "0x9472661f7d2b3b0db1b86105023c9bd4344d997e",
+  "toAddress": "0x4b5307ec37562eb81d45e23862936bcb8836b1db",
+  "value": "5000000000000",
+  "tokenSymbol": "PYUSD",
+  "riskFactors": [
+    {
+      "type": "VOLUME_ANOMALY",
+      "description": "Transaction volume is 12.8 standard deviations above 30-day average",
+      "severity": "HIGH"
+    },
+    {
+      "type": "ADDRESS_HISTORY",
+      "description": "Receiving address has been active for less than 7 days",
+      "severity": "MEDIUM"
+    },
+    {
+      "type": "PATTERN_MATCH",
+      "description": "Transaction follows potential wash trading pattern",
+      "severity": "MEDIUM"
+    }
+  ],
+  "historicalActivity": {
+    "senderAvgTxValue": "120500000000",
+    "networkAvgTxValue": "83750000000",
+    "recentSimilarTxs": 3
+  },
+  "recommendedAction": "Investigate transaction pattern and monitor receiving address for further suspicious activity"
+}</pre>
+      </div>
+      
+      <!-- Actions -->
+      <div style="margin-top: 35px; text-align: center;">
+        <a href="https://etherscan.io/tx/0x3d4bfa03c120ca82d56bb596589c513e878e394f2a9394c1b692d3841c776e95" style="display: inline-block; background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%); color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; margin-right: 15px; font-weight: bold; box-shadow: 0 3px 6px rgba(184, 134, 11, 0.2); transition: all 0.3s ease;">
+          View Transaction
+        </a>
+        <a href="#" style="display: inline-block; background-color: #0C2340; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; box-shadow: 0 3px 6px rgba(12, 35, 64, 0.2); transition: all 0.3s ease;">
+          Open Dashboard
+        </a>
+      </div>
+    </div>
+    
+    <!-- Footer -->
+    <div style="background: linear-gradient(to right, #F5DEB320, #F5DEB360); padding: 15px; text-align: center; font-size: 13px; color: #B8860B; border-top: 1px solid #F5DEB3;">
+      <table width="100%" border="0" cellpadding="0" cellspacing="0">
+        <tr>
+          <td align="center">
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAAsTAAALEwEAmpwYAAABt0lEQVR4nO2UvWsUURTFf2dmXRNFUvgVhDSuiBYWVmJnYSH+AWKVwioWFiLYpLASC8HGRrCwEBHsUtlYCBYKfkQJKGpQdlfcnXnP4r0xk9lZNoHELsPAg3vPu/fcc++5M/A//jkSLDuB/W3EE8Pv4soNINKlHiDeBNkHHAXuLAO8ApwBBsCQyBDoAQdaTzVc5BLu3Ts+ZrqmtDmKoaLl3PCy18tz1eGRz2KiQhSGNS/Xh9boCXoVJ0q++YkCrFxPLTkG/AJ2/SH9VZEBcHCUzVdNcC2KdEP2Jsl+ArtEdxD+QrRX9GqNmvZqxAkRw1CxXnSGOxdXl3YBMLqD8BdiOQkJR5tFaLWGBx1M1I9Ei5GxKWLYVLHdYrGHQA5cBza3TRCLXGwW4a4jJsQ2KkEKyIDzSwI4J5wA+jHRgVj5PiQMzSgAV9o2CbmBDNwGrrfVzfgBvDODdWAReKZBOc5pnT3OU+SeBGYT4lxr9jg91ZbSR2bEzMgQsQ/3l8BaXXQP8FnDspDrg9Z5sUu7OkBk5MA+82QgKNhspgYuPwTnK+Apcn/Rsg54/W/HH8QPzA3+GW7Pz/cAAAAASUVORK5CYII=" alt="Shield" width="24" height="24" style="vertical-align: middle; margin-right: 8px;">
+            <p style="margin: 0; display: inline-block; vertical-align: middle;">This is an automated alert from the PYUSD Guardian monitoring system.</p>
+          </td>
+        </tr>
+        <tr>
+          <td align="center">
+            <p style="margin: 8px 0 0;">© 2025 PYUSD Guardian | <a href="#" style="color: #B8860B; text-decoration: none;">Manage Alert Settings</a></p>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</body>
+</html>
