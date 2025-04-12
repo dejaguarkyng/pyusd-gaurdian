@@ -19,6 +19,7 @@
   "homepage": "https://github.com/dejaguarkyng/pyusd-gaurdian#readme",
   "dependencies": {
     "dotenv": "^16.5.0",
-    "ethers": "^6.13.5"
+    "ethers": "^6.13.5",
+    "nodemailer": "^6.10.0"
   }
 }

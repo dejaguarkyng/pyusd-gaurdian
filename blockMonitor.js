@@ -4,6 +4,9 @@ import { ethers } from 'ethers';
 import { getTransactionTrace } from './traceAnalyzer.js';
 import { analyzeTrace } from './traceParser.js';
 import { evaluateCompliance } from './complianceEngine.js';
+import { pushToSheet } from './sheetsExporter.js';
+import { sendDiscordAlert } from './discordNotifier.js';
+import { sendEmailAlert } from './emailNotifier.js';
 
 
 // Load environment variables
@@ -51,15 +54,23 @@ async function monitorBlocks() {
                 if (trace) {
                   const report = analyzeTrace(trace);
                   const complianceFlags = evaluateCompliance(trace, tx);
-              
-                  const isNonCompliant = complianceFlags.length > 0;
-              
-                  if (report.flagged || isNonCompliant) {
-                    console.log(`🚨 TX ${tx.hash} flagged!`);
-                    console.log(report);
-                    console.log('📋 Compliance Issues:', complianceFlags);
-                  } else {
-                    console.log(`✅ TX ${tx.hash} is clean.`);
+                
+                  if (report.flagged || complianceFlags.length > 0) {
+                    console.log(`🚨 TX ${tx.hash} flagged!`);       
+                    for (const issue of complianceFlags) {
+                      const alert = {
+                        txHash: tx.hash,
+                        rule: issue.rule,
+                        details: issue.details,
+                        riskReport: report,
+                      };
+
+                      await Promise.all([
+                        pushToSheet(alert),
+                        sendDiscordAlert(alert),
+                        sendEmailAlert(alert),
+                      ]);
+                    }
                   }
                 }
               }
