@@ -29,6 +29,21 @@ async function connectToDatabase() {
   }
 }
 
+
+import { Strategy as DiscordStrategy } from 'passport-discord';
+
+const discordStrategy = new DiscordStrategy({
+  clientID: '136079333344242334517984234409236',
+  clientSecret: 'qo6BfufYsgst525QyBAjYegdfgdfgdgdgdgwAKHdVWeDW8W7nvnvHg7kw',
+  callbackURL: 'http://localhost:3000/auth/discord/callback',
+  scope: ['identify', 'email']
+}, (accessToken, refreshToken, profile, done) => {
+  // You can save the profile to a database here
+  return done(null, profile);
+});
+
+export { discordStrategy };
+
 // Get all users with Discord webhook URLs
 async function getUserDiscordWebhooks() {
   try {
