@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node blockMonitor.js"
+    "start": "node server.js"
   },
   "repository": {
     "type": "git",
@@ -32,3 +32,5 @@
     "winston": "^3.10.0"
   }
 }
+
+
