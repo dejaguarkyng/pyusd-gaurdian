@@ -521,48 +521,94 @@
 
     // Initialize WebSocket with safeguards against reload loops
     function initializeWebSocket() {
-      if (window.socketInitialized) return;
+      // Prevent multiple initializations in the same page load
+      if (window.socketInitialized) {
+        console.log("Socket already initialized, skipping");
+        return;
+      }
       
-      // Cleanup previous connection
+      window.socketInitialized = true;
+      console.log("Socket initialization started");
+      
+      // Clean up any existing socket connection
       if (appState.socket) {
-        appState.socket.removeAllListeners();
-        appState.socket.close();
+        try {
+          appState.socket.disconnect();
+          appState.socket.removeAllListeners();
+        } catch (e) {
+          console.error('Error cleaning up socket:', e);
+        }
         appState.socket = null;
       }
-    
-     // Change the Socket.IO client initialization to:
-appState.socket = io(WS_URL, {
-  reconnection: false,
-  timeout: 10000,
-  transports: ['websocket', 'polling'], // Allow fallback to polling
-  withCredentials: true,
-  extraHeaders: {
-    "X-Client-Type": "guardian-ui"
-  }
-});
-      // Add ping/pong monitoring
-      let pongTimeout;
-      appState.socket.on('pong', () => {
-        clearTimeout(pongTimeout);
-        updateConnectionStatus('connected');
-      });
-    
-      appState.socket.on('connect', () => {
-        console.log('WS connected');
-        // Start ping/pong
-        const pingInterval = setInterval(() => {
-          if (!appState.connected) {
-            clearInterval(pingInterval);
-            return;
+      
+      // Clear any pending reconnect timers
+      if (appState.reconnectTimer) {
+        clearTimeout(appState.reconnectTimer);
+        appState.reconnectTimer = null;
+      }
+      
+      try {
+        updateConnectionStatus('connecting');
+        console.log('Initializing WebSocket connection...');
+        
+        appState.socket = io(WS_URL, {
+          reconnection: false, // We'll handle reconnection manually
+          timeout: 10000,
+          transports: ['websocket']
+        });
+        
+        appState.socket.on('connect', () => {
+          console.log('WebSocket connected');
+          appState.connected = true;
+          appState.reconnectAttempts = 0;
+          updateConnectionStatus('connected');
+        });
+        
+        appState.socket.on('disconnect', (reason) => {
+          console.log('WebSocket disconnected:', reason);
+          appState.connected = false;
+          updateConnectionStatus('disconnected');
+          
+          // Only attempt to reconnect if not closing intentionally
+          if (reason !== 'io client disconnect') {
+            scheduleReconnect();
           }
-          appState.socket.emit('ping');
-          pongTimeout = setTimeout(() => {
-            updateConnectionStatus('error');
-            appState.socket.disconnect();
-          }, 5000);
-        }, 15000);
-      });
+        });
+        
+        appState.socket.on('connect_error', (error) => {
+          console.error('WebSocket connection error:', error);
+          appState.connected = false;
+          updateConnectionStatus('error');
+          scheduleReconnect();
+        });
+        
+        // Throttle the new-alert handler to prevent UI flickering
+        let alertDebounceTimer = null;
+        let pendingAlerts = [];
+        
+        appState.socket.on('new-alert', (alert) => {
+          console.log('New alert received:', alert);
+          
+          // Add to pending alerts
+          pendingAlerts.push(alert);
+          
+          // If we already have a timer running, let it handle the update
+          if (alertDebounceTimer) return;
+          
+          // Set a timer to process alerts in batches
+          alertDebounceTimer = setTimeout(() => {
+            processAlertBatch(pendingAlerts);
+            pendingAlerts = [];
+            alertDebounceTimer = null;
+          }, 500); // Process alerts at most every 500ms
+        });
+      } catch (error) {
+        console.error('Failed to initialize WebSocket:', error);
+        updateConnectionStatus('error');
+        scheduleReconnect();
+      }
     }
+
     
     function processAlertBatch(alerts) {
       if (appState.isUpdating || alerts.length === 0) return;
@@ -719,7 +765,7 @@ appState.socket = io(WS_URL, {
           renderAlerts();
           
           // Initialize WebSocket
-          initializeWebSocket();
+          <!-- initializeWebSocket(); -->
           
           // Set up event listeners
           setupEventListeners();

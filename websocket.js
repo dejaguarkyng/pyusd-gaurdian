@@ -5,8 +5,8 @@ export function setupWebsocket(io) {
   io.on('connection', (socket) => {
     logger.info('Client connected', { socketId: socket.id });
     
-    socket.on('disconnect', () => {
-      logger.info('Client disconnected', { socketId: socket.id });
+    socket.on('disconnect', (reason) => {
+      logger.info('Client disconnected', { socketId: socket.id, reason });
     });
     
     // Add any additional socket event handlers here

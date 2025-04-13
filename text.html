@@ -624,38 +624,63 @@
     }
 
     // Initialize WebSocket connection
+
     function initializeWebSocket() {
+      // Prevent multiple initializations
+      if (window.socketInitialized) {
+        console.log("WebSocket already initialized, skipping");
+        return;
+      }
+      window.socketInitialized = true;
+    
+      // Clean up any existing connection just in case
+      if (appState.socket) {
+        try {
+          appState.socket.disconnect();
+          appState.socket.removeAllListeners();
+        } catch (e) {
+          console.error('Error cleaning up existing socket:', e);
+        }
+        appState.socket = null;
+      }
+    
       try {
-        appState.socket = io(WS_URL);
-        
+        console.log('Initializing WebSocket...');
+        appState.socket = io(WS_URL, {
+          reconnection: false,
+          timeout: 10000,
+          transports: ['websocket']
+        });
+    
         appState.socket.on('connect', () => {
           appState.connected = true;
           updateConnectionStatus('connected');
           console.log('WebSocket connected');
         });
-        
-        appState.socket.on('disconnect', () => {
+    
+        appState.socket.on('disconnect', (reason) => {
           appState.connected = false;
           updateConnectionStatus('disconnected');
-          console.log('WebSocket disconnected');
+          console.log('WebSocket disconnected:', reason);
+    
+          if (reason !== 'io client disconnect') {
+            scheduleReconnect(); // Your custom reconnect logic
+          }
         });
-        
+    
         appState.socket.on('connect_error', (error) => {
           appState.connected = false;
           updateConnectionStatus('error');
           console.error('WebSocket connection error:', error);
+          scheduleReconnect(); // Optional
         });
-        
+    
         appState.socket.on('new-alert', (alert) => {
           console.log('New alert received:', alert);
-          // Add to alerts and update UI
-          appState.alerts.unshift(alert);
-          // Keep only the last 50 alerts
-          if (appState.alerts.length > 50) {
-            appState.alerts.pop();
-          }
           
-          // Create transaction object from alert
+          appState.alerts.unshift(alert);
+          if (appState.alerts.length > 50) appState.alerts.pop();
+    
           const tx = {
             hash: alert.txHash,
             blockNumber: alert.blockNumber,
@@ -667,17 +692,12 @@
               severity: getSeverityFromRule(alert.rule)
             }]
           };
-          
-          // Add to transactions if not already present
+    
           if (!appState.transactions.some(t => t.hash === tx.hash)) {
             appState.transactions.unshift(tx);
-            // Keep only the last 100 transactions
-            if (appState.transactions.length > 100) {
-              appState.transactions.pop();
-            }
+            if (appState.transactions.length > 100) appState.transactions.pop();
           }
-          
-          // Add notification
+    
           addNotification({
             title: 'New Alert',
             message: `${alert.rule} detected in transaction ${alert.txHash.substring(0, 10)}...`,
@@ -685,18 +705,19 @@
             timestamp: new Date(),
             data: alert
           });
-          
-          // Update UI
+    
           updateStats();
           renderTransactions();
           renderAlerts();
           updateChart();
         });
+    
       } catch (error) {
         console.error('Failed to initialize WebSocket:', error);
         updateConnectionStatus('error');
       }
     }
+    
 
     // Update connection status indicator
     function updateConnectionStatus(status) {
