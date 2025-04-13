@@ -558,14 +558,15 @@
         });
         
         appState.socket.on('connect', () => {
-          console.log('WebSocket connected');
+          logPersistent("WebSocket connected");
+
           appState.connected = true;
           appState.reconnectAttempts = 0;
           updateConnectionStatus('connected');
         });
         
         appState.socket.on('disconnect', (reason) => {
-          console.log('WebSocket disconnected:', reason);
+          logPersistent("WebSocket disconnected: " + reason);
           appState.connected = false;
           updateConnectionStatus('disconnected');
           
@@ -576,7 +577,7 @@
         });
         
         appState.socket.on('connect_error', (error) => {
-          console.error('WebSocket connection error:', error);
+          logPersistent("WebSocket connection error: " + error, 'error');
           appState.connected = false;
           updateConnectionStatus('error');
           scheduleReconnect();
@@ -609,6 +610,26 @@
       }
     }
 
+
+    function logPersistent(message, level = 'log') {
+      const timestamp = new Date().toISOString();
+      const fullMessage = `[${timestamp}] ${message}`;
+    
+      // Save to localStorage (with a capped size)
+      const logs = JSON.parse(localStorage.getItem('persistentLogs') || '[]');
+      logs.push(fullMessage);
+      if (logs.length > 1000) logs.shift(); // keep last 1000 entries
+      localStorage.setItem('persistentLogs', JSON.stringify(logs));
+    
+      // Also log to console
+      console[level](fullMessage);
+    }
+    
+    // Clear logs manually when needed
+    window.clearPersistentLogs = () => localStorage.removeItem('persistentLogs');
+    window.showPersistentLogs = () => console.log(JSON.parse(localStorage.getItem('persistentLogs')));
+
+    
     function processAlertBatch(alerts) {
       if (appState.isUpdating || alerts.length === 0) return;
       
