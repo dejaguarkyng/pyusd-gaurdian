@@ -23,6 +23,7 @@ const limit = pLimit(MAX_CONCURRENT_TRACES);
 
 // Track latest scanned block
 let latestBlock = STARTING_BLOCK;
+
 async function processTransaction(tx, blockNumber, io) {
   if (!tx || typeof tx !== 'object') {
     logger.warn(`Null or malformed transaction received`, { blockNumber });

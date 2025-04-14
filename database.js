@@ -189,29 +189,41 @@ export async function getTransactions(page = 1, limit = 20) {
 }
 
 // Get paginated alerts
+
 export async function getAlerts(page = 1, limit = 20, filter = {}) {
   const skip = (page - 1) * limit;
 
-  // Use the filter to apply the severity or other criteria to the query
-  const [alerts, total] = await Promise.all([
-    Alert.find(filter) // Apply the filter here
-      .sort({ timestamp: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean(),
-    Alert.countDocuments(filter) // Apply the filter to the count as well
-  ]);
+  // Check if the severity filter is valid (low, medium, high), if not, return all alerts
+  let severity = {};
+  if (filter.severity && ['low', 'medium', 'high'].includes(filter.severity)) {
+    severity = { severity: filter.severity };  // Apply severity filter if it's valid
+  }
 
-  return {
-    alerts,
-    pagination: {
-      total,
-      page,
-      limit,
-      pages: Math.ceil(total / limit)
-    }
-  };
+  try {
+    const [alerts, total] = await Promise.all([
+      Alert.find(severity)  // Apply the severity filter (or no filter if invalid)
+        .sort({ timestamp: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Alert.countDocuments(severity), // Count the filtered alerts
+    ]);
+
+    return {
+      alerts,
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit),
+      },
+    };
+  } catch (err) {
+    console.error("Error fetching alerts:", err);
+    throw new Error('Failed to fetch alerts');
+  }
 }
+
 
 export async function getMonitoringStartTime() {
   const firstTx = await Transaction.find()

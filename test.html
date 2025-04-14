@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" class="dark">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,19 +10,21 @@
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- Socket.IO Client -->
   <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
-  
+
   <!-- Prevent reload loop detection script -->
   <script>
     // Prevent reload loops by adding a counter to localStorage
     try {
       const reloadCount = parseInt(localStorage.getItem('reloadCount') || '0');
       console.log('Page load count:', reloadCount + 1);
-      
+
       if (reloadCount > 5) {
         console.error('Detected reload loop, stopping initialization');
         localStorage.setItem('reloadCount', '0');
@@ -37,11 +40,11 @@
       console.error('Error in reload detection:', e);
     }
   </script>
-  
+
   <!-- Prevent theme flashing -->
   <script>
     // Immediately set theme before page renders to prevent flashing
-    (function() {
+    (function () {
       try {
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme === 'light') {
@@ -55,7 +58,7 @@
       }
     })();
   </script>
-  
+
   <!-- Tailwind Configuration -->
   <script>
     tailwind.config = {
@@ -91,7 +94,7 @@
       }
     }
   </script>
-  
+
   <!-- Custom Styles -->
   <style type="text/tailwind">
     @layer components {
@@ -167,10 +170,12 @@
     }
   </style>
 </head>
+
 <body class="dark:bg-dark-900 bg-gray-50 dark:text-white text-gray-800 font-sans">
   <div class="min-h-screen flex flex-col">
     <!-- Header -->
-    <header class="dark:border-b dark:border-gold-800/30 border-b border-gold-300/50 py-4 dark:bg-dark-800 bg-white sticky top-0 z-10 shadow-sm">
+    <header
+      class="dark:border-b dark:border-gold-800/30 border-b border-gold-300/50 py-4 dark:bg-dark-800 bg-white sticky top-0 z-10 shadow-sm">
       <div class="container mx-auto px-4 md:px-6 flex justify-between items-center">
         <div class="flex items-center space-x-3">
           <div class="gold-gradient w-10 h-10 rounded-full flex items-center justify-center shadow-lg">
@@ -223,140 +228,160 @@
       <div class="card mb-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
         <div class="border-b border-amber-300/50 dark:border-amber-800/30">
           <div class="flex overflow-x-auto">
-            <div id="tab-transactions" class="px-6 py-3 text-amber-800 dark:text-amber-300 font-medium border-b-2 border-amber-500 cursor-pointer transition-colors duration-150 whitespace-nowrap flex items-center">
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+            <div id="tab-transactions"
+              class="px-6 py-3 text-amber-800 dark:text-amber-300 font-medium border-b-2 border-amber-500 cursor-pointer transition-colors duration-150 whitespace-nowrap flex items-center">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
+                </path>
               </svg>
               Transactions
             </div>
-            <div id="tab-alerts" class="px-6 py-3 text-gray-500 dark:text-gray-400 font-medium hover:text-amber-700 dark:hover:text-amber-200 cursor-pointer transition-colors duration-150 whitespace-nowrap flex items-center">
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+            <div id="tab-alerts"
+              class="px-6 py-3 text-gray-500 dark:text-gray-400 font-medium hover:text-amber-700 dark:hover:text-amber-200 cursor-pointer transition-colors duration-150 whitespace-nowrap flex items-center">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+                </path>
               </svg>
               Alerts
             </div>
-            <div id="tab-analytics" class="px-6 py-3 text-gray-500 dark:text-gray-400 font-medium hover:text-amber-700 dark:hover:text-amber-200 cursor-pointer transition-colors duration-150 whitespace-nowrap flex items-center">
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            <div id="tab-analytics"
+              class="px-6 py-3 text-gray-500 dark:text-gray-400 font-medium hover:text-amber-700 dark:hover:text-amber-200 cursor-pointer transition-colors duration-150 whitespace-nowrap flex items-center">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                </path>
               </svg>
               Analytics
             </div>
           </div>
         </div>
       </div>
-        
-        <!-- Tab Content -->
-        <div id="tab-content" class="p-4">
-          <!-- Transaction Tab (Default) -->
-          <div id="content-transactions" class="space-y-4">
-            <div class="flex justify-between items-center mb-4">
-              <h2 class="font-serif text-xl gold-text">Recent Transactions</h2>
-              <select id="tx-filter" class="dark:bg-dark-900 bg-white dark:text-gold-200 text-gold-700 text-sm rounded-md px-3 py-2 border dark:border-gold-700/30 border-gold-300 focus:border-gold-400 focus:outline-none focus:ring-2 focus:ring-gold-300/50">
-                <option value="all">All Transactions</option>
-                <option value="flagged">Flagged Only</option>
-              </select>
-            </div>
-            
-            <div class="overflow-x-auto rounded-lg border dark:border-gold-800/30 border-gold-300/50">
-              <table class="min-w-full divide-y dark:divide-gold-800/30 divide-gold-300/50">
-                <thead class="dark:bg-dark-900/50 bg-gold-50/50">
-                  <tr>
-                    <th scope="col" class="table-header">Transaction Hash</th>
-                    <th scope="col" class="table-header">Block</th>
-                    <th scope="col" class="table-header">Status</th>
-                    <th scope="col" class="table-header text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="tx-table-body" class="divide-y dark:divide-gold-800/30 divide-gold-300/50 dark:bg-dark-800/50 bg-white">
-                  <!-- Transactions will be inserted here -->
-                  <tr>
-                    <td colspan="4" class="px-6 py-10 text-center dark:text-gold-200/50 text-gold-700/50">
-                      <div class="flex flex-col items-center justify-center">
-                        <i class="fas fa-circle-notch fa-spin mb-3 text-2xl dark:text-gold-400/30 text-gold-400/70"></i>
-                        <p>Loading transactions...</p>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+
+      <!-- Tab Content -->
+      <div id="tab-content" class="p-4">
+        <!-- Transaction Tab (Default) -->
+        <div id="content-transactions" class="space-y-4">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="font-serif text-xl gold-text">Recent Transactions</h2>
+            <select id="tx-filter"
+              class="dark:bg-dark-900 bg-white dark:text-gold-200 text-gold-700 text-sm rounded-md px-3 py-2 border dark:border-gold-700/30 border-gold-300 focus:border-gold-400 focus:outline-none focus:ring-2 focus:ring-gold-300/50">
+              <option value="all">All Transactions</option>
+              <!-- <option value="flagged">Flagged Only</option> -->
+            </select>
           </div>
-          
-          <!-- Alerts Tab (Hidden by default) -->
-          <div id="content-alerts" class="hidden space-y-4">
-            <div class="flex justify-between items-center mb-4">
-              <h2 class="font-serif text-xl gold-text">Recent Alerts</h2>
-              <select id="alert-filter" class="dark:bg-dark-900 bg-white dark:text-gold-200 text-gold-700 text-sm rounded-md px-3 py-2 border dark:border-gold-700/30 border-gold-300 focus:border-gold-400 focus:outline-none focus:ring-2 focus:ring-gold-300/50">
-                <option value="all">All Severities</option>
-                <option value="high">High Risk Only</option>
-                <option value="medium">Medium Risk Only</option>
-                <option value="low">Low Risk Only</option>
-              </select>
-            </div>
-            
-            <div id="alerts-container" class="space-y-3 max-h-[600px] overflow-y-auto pr-1">
-              <!-- Alerts will be inserted here -->
-              <div class="px-6 py-10 text-center dark:text-gold-200/50 text-gold-700/50">
-                <div class="flex flex-col items-center justify-center">
-                  <i class="fas fa-circle-notch fa-spin mb-3 text-2xl dark:text-gold-400/30 text-gold-400/70"></i>
-                  <p>Loading alerts...</p>
-                </div>
+
+          <div class="overflow-x-auto rounded-lg border dark:border-gold-800/30 border-gold-300/50">
+            <table class="min-w-full divide-y dark:divide-gold-800/30 divide-gold-300/50">
+              <thead class="dark:bg-dark-900/50 bg-gold-50/50">
+                <tr>
+                  <th scope="col" class="table-header">Transaction Hash</th>
+                  <th scope="col" class="table-header">Block</th>
+                  <th scope="col" class="table-header">Status</th>
+                  <th scope="col" class="table-header text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="tx-table-body"
+                class="divide-y dark:divide-gold-800/30 divide-gold-300/50 dark:bg-dark-800/50 bg-white">
+                <!-- Transactions will be inserted here -->
+                <tr>
+                  <td colspan="4" class="px-6 py-10 text-center dark:text-gold-200/50 text-gold-700/50">
+                    <div class="flex flex-col items-center justify-center">
+                      <i class="fas fa-circle-notch fa-spin mb-3 text-2xl dark:text-gold-400/30 text-gold-400/70"></i>
+                      <p>Loading transactions...</p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Alerts Tab (Hidden by default) -->
+        <div id="content-alerts" class="hidden space-y-4">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="font-serif text-xl gold-text">Recent Alerts</h2>
+            <select id="alert-filter"
+              class="dark:bg-dark-900 bg-white dark:text-gold-200 text-gold-700 text-sm rounded-md px-3 py-2 border dark:border-gold-700/30 border-gold-300 focus:border-gold-400 focus:outline-none focus:ring-2 focus:ring-gold-300/50">
+              <option value="all">All Severities</option>
+              <option value="high">High Risk Only</option>
+              <option value="medium">Medium Risk Only</option>
+              <option value="low">Low Risk Only</option>
+            </select>
+          </div>
+
+          <div id="alerts-container" class="space-y-3 max-h-[600px] overflow-y-auto pr-1">
+            <!-- Alerts will be inserted here -->
+            <div class="px-6 py-10 text-center dark:text-gold-200/50 text-gold-700/50">
+              <div class="flex flex-col items-center justify-center">
+                <i class="fas fa-circle-notch fa-spin mb-3 text-2xl dark:text-gold-400/30 text-gold-400/70"></i>
+                <p>Loading alerts...</p>
               </div>
             </div>
           </div>
-          
-          <!-- Analytics Tab (Hidden by default) -->
-          <div id="content-analytics" class="hidden space-y-4">
-            <div class="flex justify-between items-center mb-4">
-              <h2 class="font-serif text-xl gold-text">Transaction Analytics</h2>
-              <select id="analytics-timeframe" class="dark:bg-dark-900 bg-white dark:text-gold-200 text-gold-700 text-sm rounded-md px-3 py-2 border dark:border-gold-700/30 border-gold-300 focus:border-gold-400 focus:outline-none focus:ring-2 focus:ring-gold-300/50">
-                <option value="day">Last 24 Hours</option>
-                <option value="week">Last 7 Days</option>
-                <option value="month">Last 30 Days</option>
-              </select>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div class="card p-4">
-                <h3 class="text-lg font-medium mb-4 dark:text-gold-300 text-gold-700">Transaction Volume</h3>
-                <div class="h-64 flex items-center justify-center">
-                  <p class="text-sm dark:text-gold-200/50 text-gold-700/50">Analytics visualization will appear here</p>
-                </div>
+        </div>
+
+        <!-- Analytics Tab (Hidden by default) -->
+        <div id="content-analytics" class="hidden space-y-4">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="font-serif text-xl gold-text">Transaction Analytics</h2>
+            <select id="analytics-timeframe"
+              class="dark:bg-dark-900 bg-white dark:text-gold-200 text-gold-700 text-sm rounded-md px-3 py-2 border dark:border-gold-700/30 border-gold-300 focus:border-gold-400 focus:outline-none focus:ring-2 focus:ring-gold-300/50">
+              <option value="day">Last 24 Hours</option>
+              <option value="week">Last 7 Days</option>
+              <option value="month">Last 30 Days</option>
+            </select>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="card p-4">
+              <h3 class="text-lg font-medium mb-4 dark:text-gold-300 text-gold-700">Transaction Volume</h3>
+              <div class="h-64 flex items-center justify-center">
+                <p class="text-sm dark:text-gold-200/50 text-gold-700/50">Analytics visualization will appear here</p>
               </div>
-              
-              <div class="card p-4">
-                <h3 class="text-lg font-medium mb-4 dark:text-gold-300 text-gold-700">Risk Distribution</h3>
-                <div class="h-64 flex items-center justify-center">
-                  <p class="text-sm dark:text-gold-200/50 text-gold-700/50">Analytics visualization will appear here</p>
-                </div>
+            </div>
+
+            <div class="card p-4">
+              <h3 class="text-lg font-medium mb-4 dark:text-gold-300 text-gold-700">Risk Distribution</h3>
+              <div class="h-64 flex items-center justify-center">
+                <p class="text-sm dark:text-gold-200/50 text-gold-700/50">Analytics visualization will appear here</p>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </main>
-    
-    <!-- Footer -->
-    <footer class="dark:bg-dark-800 bg-white border-t dark:border-gold-800/30 border-gold-300/50 py-4">
-      <div class="container mx-auto px-4 md:px-6 flex flex-col md:flex-row justify-between items-center">
-        <div class="text-sm dark:text-gold-200/70 text-gold-700/70 mb-2 md:mb-0">
-          © 2025 PYUSD Guardian. All rights reserved.
-        </div>
-        <div class="flex items-center space-x-4">
-          <a href="#" class="text-sm dark:text-gold-300 text-gold-600 hover:text-gold-500 transition-colors">Documentation</a>
-          <a href="#" class="text-sm dark:text-gold-300 text-gold-600 hover:text-gold-500 transition-colors">API</a>
-          <a href="#" class="text-sm dark:text-gold-300 text-gold-600 hover:text-gold-500 transition-colors">Support</a>
-        </div>
+  </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="dark:bg-dark-800 bg-white border-t dark:border-gold-800/30 border-gold-300/50 py-4">
+    <div class="container mx-auto px-4 md:px-6 flex flex-col md:flex-row justify-between items-center">
+      <div class="text-sm dark:text-gold-200/70 text-gold-700/70 mb-2 md:mb-0">
+        © 2025 PYUSD Guardian. All rights reserved.
       </div>
-    </footer>
+      <div class="flex items-center space-x-4">
+        <a href="#"
+          class="text-sm dark:text-gold-300 text-gold-600 hover:text-gold-500 transition-colors">Documentation</a>
+        <a href="#" class="text-sm dark:text-gold-300 text-gold-600 hover:text-gold-500 transition-colors">API</a>
+        <a href="#" class="text-sm dark:text-gold-300 text-gold-600 hover:text-gold-500 transition-colors">Support</a>
+      </div>
+    </div>
+  </footer>
   </div>
 
   <!-- Transaction Details Modal -->
-  <div id="tx-modal" class="fixed inset-0 dark:bg-black/80 bg-black/50 backdrop-blur-sm flex items-center justify-center hidden z-50">
-    <div class="dark:bg-dark-800 bg-white rounded-lg border dark:border-gold-700/50 border-gold-300/50 max-w-3xl w-full mx-4 max-h-[80vh] overflow-y-auto shadow-xl">
+  <div id="tx-modal"
+    class="fixed inset-0 dark:bg-black/80 bg-black/50 backdrop-blur-sm flex items-center justify-center hidden z-50">
+    <div
+      class="dark:bg-dark-800 bg-white rounded-lg border dark:border-gold-700/50 border-gold-300/50 max-w-3xl w-full mx-4 max-h-[80vh] overflow-y-auto shadow-xl">
       <div class="flex justify-between items-center px-6 py-4 border-b dark:border-gold-800/30 border-gold-300/50">
         <h3 class="font-serif text-xl gold-text">Transaction Details</h3>
-        <button id="close-modal" class="dark:text-gold-300 text-gold-600 hover:text-gold-400 p-2 rounded-full hover:bg-gold-100/20 transition-colors">
+        <button id="close-modal"
+          class="dark:text-gold-300 text-gold-600 hover:text-gold-400 p-2 rounded-full hover:bg-gold-100/20 transition-colors">
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -373,11 +398,14 @@
   </div>
 
   <!-- Notifications Sign-up Modal -->
-  <div id="notificationsModal" class="fixed inset-0 dark:bg-black/80 bg-black/50 backdrop-blur-sm flex items-center justify-center hidden z-50">
-    <div class="dark:bg-dark-800 bg-white rounded-lg border dark:border-gold-700/50 border-gold-300/50 max-w-xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-xl">
+  <div id="notificationsModal"
+    class="fixed inset-0 dark:bg-black/80 bg-black/50 backdrop-blur-sm flex items-center justify-center hidden z-50">
+    <div
+      class="dark:bg-dark-800 bg-white rounded-lg border dark:border-gold-700/50 border-gold-300/50 max-w-xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-xl">
       <div class="flex justify-between items-center px-6 py-4 border-b dark:border-gold-800/30 border-gold-300/50">
         <h3 class="font-serif text-xl gold-text">Notification Preferences</h3>
-        <button id="closeNotificationsModal" class="dark:text-gold-300 text-gold-600 hover:text-gold-400 p-2 rounded-full hover:bg-gold-100/20 transition-colors">
+        <button id="closeNotificationsModal"
+          class="dark:text-gold-300 text-gold-600 hover:text-gold-400 p-2 rounded-full hover:bg-gold-100/20 transition-colors">
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -385,45 +413,53 @@
         <form id="notificationsForm" class="space-y-6">
           <div>
             <p class="text-sm dark:text-gold-200 text-gold-700 mb-4">
-              Stay updated with real-time alerts about suspicious PYUSD transactions. Choose your preferred notification methods below.
+              Stay updated with real-time alerts about suspicious PYUSD transactions. Choose your preferred notification
+              methods below.
             </p>
           </div>
-          
+
           <div class="space-y-4">
             <h4 class="font-medium dark:text-gold-300 text-gold-700">Notification Methods</h4>
-            
+
             <div class="card notification-option">
               <div class="flex items-center h-5">
-                <input id="email-checkbox" name="notification-method" type="checkbox" value="email" class="form-checkbox">
+                <input id="email-checkbox" name="notification-method" type="checkbox" value="email"
+                  class="form-checkbox">
               </div>
               <div class="flex-1">
-                <label for="email-checkbox" class="font-medium dark:text-gold-100 text-gray-800">Email Notifications</label>
-                <p class="text-sm dark:text-gold-200/70 text-gray-600">Receive detailed alerts directly to your inbox</p>
+                <label for="email-checkbox" class="font-medium dark:text-gold-100 text-gray-800">Email
+                  Notifications</label>
+                <p class="text-sm dark:text-gold-200/70 text-gray-600">Receive detailed alerts directly to your inbox
+                </p>
               </div>
               <div class="text-xl dark:text-gold-400 text-gold-600">
                 <i class="fas fa-envelope"></i>
               </div>
             </div>
-            
+
             <div class="card notification-option">
               <div class="flex items-center h-5">
-                <input id="discord-checkbox" name="notification-method" type="checkbox" value="discord" class="form-checkbox">
+                <input id="discord-checkbox" name="notification-method" type="checkbox" value="discord"
+                  class="form-checkbox">
               </div>
               <div class="flex-1">
-                <label for="discord-checkbox" class="font-medium dark:text-gold-100 text-gray-800">Discord Notifications</label>
+                <label for="discord-checkbox" class="font-medium dark:text-gold-100 text-gray-800">Discord
+                  Notifications</label>
                 <p class="text-sm dark:text-gold-200/70 text-gray-600">Get instant alerts in your Discord server</p>
               </div>
               <div class="text-xl dark:text-gold-400 text-gold-600">
                 <i class="fab fa-discord"></i>
               </div>
             </div>
-            
+
             <div class="card notification-option">
               <div class="flex items-center h-5">
-                <input id="telegram-checkbox" name="notification-method" type="checkbox" value="telegram" class="form-checkbox">
+                <input id="telegram-checkbox" name="notification-method" type="checkbox" value="telegram"
+                  class="form-checkbox">
               </div>
               <div class="flex-1">
-                <label for="telegram-checkbox" class="font-medium dark:text-gold-100 text-gray-800">Telegram Notifications</label>
+                <label for="telegram-checkbox" class="font-medium dark:text-gold-100 text-gray-800">Telegram
+                  Notifications</label>
                 <p class="text-sm dark:text-gold-200/70 text-gray-600">Receive alerts on your Telegram account</p>
               </div>
               <div class="text-xl dark:text-gold-400 text-gold-600">
@@ -431,30 +467,30 @@
               </div>
             </div>
           </div>
-          
+
           <div id="notification-details" class="space-y-4">
             <!-- Email field (initially hidden) -->
             <div id="email-field" class="hidden">
               <label for="email" class="form-label">Email Address</label>
               <input type="email" id="email" name="email" placeholder="your@email.com" class="form-input">
             </div>
-            
+
             <!-- Discord field (initially hidden) -->
             <div id="discord-field" class="hidden">
               <label for="discord" class="form-label">Discord Username</label>
               <input type="text" id="discord" name="discord" placeholder="username#0000" class="form-input">
             </div>
-            
+
             <!-- Telegram field (initially hidden) -->
             <div id="telegram-field" class="hidden">
               <label for="telegram" class="form-label">Telegram Username</label>
               <input type="text" id="telegram" name="telegram" placeholder="@username" class="form-input">
             </div>
           </div>
-          
+
           <div class="space-y-4">
             <h4 class="font-medium dark:text-gold-300 text-gold-700">Alert Preferences</h4>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label for="alert-severity" class="form-label">Minimum Severity</label>
@@ -464,7 +500,7 @@
                   <option value="high">High Only</option>
                 </select>
               </div>
-              
+
               <div>
                 <label for="alert-frequency" class="form-label">Notification Frequency</label>
                 <select id="alert-frequency" name="alert-frequency" class="form-input">
@@ -475,7 +511,7 @@
               </div>
             </div>
           </div>
-          
+
           <div class="pt-4 border-t dark:border-gold-800/30 border-gold-300/50">
             <button type="submit" id="save-notifications" class="btn-gold w-full">
               <i class="fas fa-bell mr-2"></i>
@@ -488,18 +524,22 @@
   </div>
 
   <!-- Loading Modal -->
-  <div id="loading-modal" class="fixed inset-0 dark:bg-black/80 bg-black/50 backdrop-blur-sm flex items-center justify-center hidden z-50">
-    <div class="dark:bg-dark-800 bg-white rounded-lg border dark:border-gold-700/50 border-gold-300/50 p-8 max-w-md w-full mx-4 text-center shadow-xl">
+  <div id="loading-modal"
+    class="fixed inset-0 dark:bg-black/80 bg-black/50 backdrop-blur-sm flex items-center justify-center hidden z-50">
+    <div
+      class="dark:bg-dark-800 bg-white rounded-lg border dark:border-gold-700/50 border-gold-300/50 p-8 max-w-md w-full mx-4 text-center shadow-xl">
       <div class="gold-gradient w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center">
         <div class="loading-spinner dark:text-dark-900 text-white"></div>
       </div>
       <h3 class="font-serif text-xl gold-text mb-2" id="loading-title">Loading Data</h3>
-      <p class="dark:text-gold-200 text-gold-700" id="loading-message">Please wait while we fetch the latest information...</p>
+      <p class="dark:text-gold-200 text-gold-700" id="loading-message">Please wait while we fetch the latest
+        information...</p>
     </div>
   </div>
 
   <!-- Success Toast -->
-  <div id="success-toast" class="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg hidden transform transition-transform duration-300 ease-in-out">
+  <div id="success-toast"
+    class="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg hidden transform transition-transform duration-300 ease-in-out">
     <div class="flex items-center">
       <i class="fas fa-check-circle mr-2"></i>
       <span id="success-message">Operation completed successfully</span>
@@ -507,7 +547,8 @@
   </div>
 
   <!-- Error Toast -->
-  <div id="error-toast" class="fixed bottom-4 right-4 bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg hidden transform transition-transform duration-300 ease-in-out">
+  <div id="error-toast"
+    class="fixed bottom-4 right-4 bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg hidden transform transition-transform duration-300 ease-in-out">
     <div class="flex items-center">
       <i class="fas fa-exclamation-circle mr-2"></i>
       <span id="error-message">An error occurred</span>
@@ -519,10 +560,10 @@
     // API Configuration
     const API_BASE_URL = 'http://localhost:3000/api'; // Change to your actual API URL
     const WS_URL = 'http://localhost:3000'; // Change to your actual WebSocket URL
-    
+
     // PYUSD Contract Address
     const PYUSD_ADDRESS = '0x6c3ea9036406852006290770b2e17e0e4f37f978';
-    
+
     // App State
     const appState = {
       currentBlock: 0,
@@ -579,7 +620,7 @@
     const telegramField = document.getElementById('telegram-field');
     const successToast = document.getElementById('success-toast');
     const successMessage = document.getElementById('success-message');
-    
+
     // Tab elements
     const tabTransactions = document.getElementById('tab-transactions');
     const tabAlerts = document.getElementById('tab-alerts');
@@ -595,7 +636,7 @@
         const themeToggle = document.getElementById('theme-toggle');
         const themeIcon = document.getElementById('theme-icon');
         const savedTheme = localStorage.getItem('theme');
-        
+
         if (savedTheme === 'light') {
           htmlElement.classList.remove('dark');
           themeIcon.classList.remove('fa-sun');
@@ -604,25 +645,25 @@
           htmlElement.classList.add('dark');
           themeIcon.classList.remove('fa-moon');
           themeIcon.classList.add('fa-sun');
-          
+
           // Only set if not already set
           if (!savedTheme) {
             localStorage.setItem('theme', 'dark');
           }
         }
-        
+
         // Toggle theme function - debounced to prevent rapid toggling
         let themeToggleTimeout;
-        themeToggle.addEventListener('click', function() {
+        themeToggle.addEventListener('click', function () {
           // Prevent multiple rapid clicks
           if (themeToggleTimeout) {
             return;
           }
-          
+
           themeToggleTimeout = setTimeout(() => {
             themeToggleTimeout = null;
           }, 300); // 300ms debounce
-          
+
           if (htmlElement.classList.contains('dark')) {
             htmlElement.classList.remove('dark');
             localStorage.setItem('theme', 'light');
@@ -658,7 +699,7 @@
       errorMessage.textContent = message;
       errorToast.classList.remove('hidden');
       errorToast.classList.add('translate-y-0');
-      
+
       setTimeout(() => {
         errorToast.classList.add('translate-y-full');
         setTimeout(() => {
@@ -673,7 +714,7 @@
       successMessage.textContent = message;
       successToast.classList.remove('hidden');
       successToast.classList.add('translate-y-0');
-      
+
       setTimeout(() => {
         successToast.classList.add('translate-y-full');
         setTimeout(() => {
@@ -684,138 +725,138 @@
     }
 
     async function fetchAPI(endpoint, options = {}, showLoadingIndicator = false) {
-  if (showLoadingIndicator) {
-    showLoading('Loading Data', 'Fetching data from the server...');
-  }
-  
-  try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `API error: ${response.status}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    showError(`Failed to fetch data: ${error.message}`);
-    throw error;
-  } finally {
-    if (showLoadingIndicator) {
-      hideLoading();
-    }
-  }
-}
-
-
-    
-    function initializeWebSocket() {
-  // CONFIGURATION: Set this to true when your WebSocket server is ready
-  const useWebSockets = false;
-  
-  if (!useWebSockets) {
-    console.log("WebSockets disabled by configuration");
-    updateConnectionStatus('disabled');
-    return;
-  }
-  
-  // Prevent multiple initializations in the same page load
-  if (window.socketInitialized) {
-    console.log("Socket already initialized, skipping");
-    return;
-  }
-  
-  window.socketInitialized = true;
-  console.log("Socket initialization started");
-  
-  // Clean up any existing socket connection
-  if (appState.socket) {
-    try {
-      appState.socket.disconnect();
-      appState.socket.removeAllListeners();
-    } catch (e) {
-      console.error('Error cleaning up socket:', e);
-    }
-    appState.socket = null;
-  }
-  
-  // Clear any pending reconnect timers
-  if (appState.reconnectTimer) {
-    clearTimeout(appState.reconnectTimer);
-    appState.reconnectTimer = null;
-  }
-  
-  try {
-    updateConnectionStatus('connecting');
-    console.log('Initializing WebSocket connection...');
-    
-    appState.socket = io(WS_URL, {
-      reconnection: false, // We'll handle reconnection manually
-      timeout: 10000,
-      transports: ['websocket']
-    });
-    
-    appState.socket.on('connect', () => {
-      console.log('WebSocket connected');
-      appState.connected = true;
-      appState.reconnectAttempts = 0;
-      updateConnectionStatus('connected');
-    });
-    
-    appState.socket.on('disconnect', (reason) => {
-      console.log('WebSocket disconnected:', reason);
-      appState.connected = false;
-      updateConnectionStatus('disconnected');
-      
-      // Only attempt to reconnect if not closing intentionally
-      if (reason !== 'io client disconnect') {
-        scheduleReconnect();
+      if (showLoadingIndicator) {
+        showLoading('Loading Data', 'Fetching data from the server...');
       }
-    });
-    
-    appState.socket.on('connect_error', (error) => {
-      console.error('WebSocket connection error:', error);
-      appState.connected = false;
-      updateConnectionStatus('error');
-      scheduleReconnect();
-    });
-    
-    // Throttle the new-alert handler to prevent UI flickering
-    let alertDebounceTimer = null;
-    let pendingAlerts = [];
-    
-    appState.socket.on('new-alert', (alert) => {
-      console.log('New alert received:', alert);
-      
-      // Add to pending alerts
-      pendingAlerts.push(alert);
-      
-      // If we already have a timer running, let it handle the update
-      if (alertDebounceTimer) return;
-      
-      // Set a timer to process alerts in batches
-      alertDebounceTimer = setTimeout(() => {
-        processAlertBatch(pendingAlerts);
-        pendingAlerts = [];
-        alertDebounceTimer = null;
-      }, 500); // Process alerts at most every 500ms
-    });
-  } catch (error) {
-    console.error('Failed to initialize WebSocket:', error);
-    updateConnectionStatus('error');
-  }
-}
-    
+
+      try {
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `API error: ${response.status}`);
+        }
+
+        return await response.json();
+      } catch (error) {
+        showError(`Failed to fetch data: ${error.message}`);
+        throw error;
+      } finally {
+        if (showLoadingIndicator) {
+          hideLoading();
+        }
+      }
+    }
+
+
+
+    function initializeWebSocket() {
+      // CONFIGURATION: Set this to true when your WebSocket server is ready
+      const useWebSockets = false;
+
+      if (!useWebSockets) {
+        console.log("WebSockets disabled by configuration");
+        updateConnectionStatus('disabled');
+        return;
+      }
+
+      // Prevent multiple initializations in the same page load
+      if (window.socketInitialized) {
+        console.log("Socket already initialized, skipping");
+        return;
+      }
+
+      window.socketInitialized = true;
+      console.log("Socket initialization started");
+
+      // Clean up any existing socket connection
+      if (appState.socket) {
+        try {
+          appState.socket.disconnect();
+          appState.socket.removeAllListeners();
+        } catch (e) {
+          console.error('Error cleaning up socket:', e);
+        }
+        appState.socket = null;
+      }
+
+      // Clear any pending reconnect timers
+      if (appState.reconnectTimer) {
+        clearTimeout(appState.reconnectTimer);
+        appState.reconnectTimer = null;
+      }
+
+      try {
+        updateConnectionStatus('connecting');
+        console.log('Initializing WebSocket connection...');
+
+        appState.socket = io(WS_URL, {
+          reconnection: false, // We'll handle reconnection manually
+          timeout: 10000,
+          transports: ['websocket']
+        });
+
+        appState.socket.on('connect', () => {
+          console.log('WebSocket connected');
+          appState.connected = true;
+          appState.reconnectAttempts = 0;
+          updateConnectionStatus('connected');
+        });
+
+        appState.socket.on('disconnect', (reason) => {
+          console.log('WebSocket disconnected:', reason);
+          appState.connected = false;
+          updateConnectionStatus('disconnected');
+
+          // Only attempt to reconnect if not closing intentionally
+          if (reason !== 'io client disconnect') {
+            scheduleReconnect();
+          }
+        });
+
+        appState.socket.on('connect_error', (error) => {
+          console.error('WebSocket connection error:', error);
+          appState.connected = false;
+          updateConnectionStatus('error');
+          scheduleReconnect();
+        });
+
+        // Throttle the new-alert handler to prevent UI flickering
+        let alertDebounceTimer = null;
+        let pendingAlerts = [];
+
+        appState.socket.on('new-alert', (alert) => {
+          console.log('New alert received:', alert);
+
+          // Add to pending alerts
+          pendingAlerts.push(alert);
+
+          // If we already have a timer running, let it handle the update
+          if (alertDebounceTimer) return;
+
+          // Set a timer to process alerts in batches
+          alertDebounceTimer = setTimeout(() => {
+            processAlertBatch(pendingAlerts);
+            pendingAlerts = [];
+            alertDebounceTimer = null;
+          }, 500); // Process alerts at most every 500ms
+        });
+      } catch (error) {
+        console.error('Failed to initialize WebSocket:', error);
+        updateConnectionStatus('error');
+      }
+    }
+
     function processAlertBatch(alerts) {
       if (appState.isUpdating || alerts.length === 0) return;
-      
+
       appState.isUpdating = true;
-      
+
       try {
         // Add all alerts to the state
         alerts.forEach(alert => {
           // Add to alerts
           appState.alerts.unshift(alert);
-          
+
           // Create transaction object from alert
           const tx = {
             hash: alert.txHash,
@@ -828,23 +869,23 @@
               severity: getSeverityFromRule(alert.rule)
             }]
           };
-          
+
           // Add to transactions if not already present
           if (!appState.transactions.some(t => t.hash === tx.txHash)) {
             appState.transactions.unshift(tx);
           }
         });
-        
+
         // Keep only the last 50 alerts
         if (appState.alerts.length > 50) {
           appState.alerts = appState.alerts.slice(0, 50);
         }
-        
+
         // Keep only the last 100 transactions
         if (appState.transactions.length > 100) {
           appState.transactions = appState.transactions.slice(0, 100);
         }
-        
+
         // Update UI once for all alerts
         updateStats();
         renderTransactions();
@@ -858,16 +899,16 @@
 
     function scheduleReconnect() {
       if (appState.reconnectTimer) return;
-      
+
       // Add exponential backoff with a longer initial delay
       const delay = 2000 + appState.reconnectDelay * Math.pow(1.5, appState.reconnectAttempts);
       console.log(`Scheduling reconnect attempt ${appState.reconnectAttempts + 1} in ${delay}ms`);
-      
+
       appState.reconnectTimer = setTimeout(() => {
         appState.reconnectAttempts++;
         appState.reconnectTimer = null;
         console.log(`Reconnect attempt ${appState.reconnectAttempts}`);
-        
+
         // Only try to reconnect if we haven't exceeded the maximum attempts
         if (appState.reconnectAttempts < appState.maxReconnectAttempts) {
           initializeWebSocket();
@@ -879,87 +920,87 @@
     }
 
 
-    
-    function updateConnectionStatus(status) {
-  // Make sure the connection status is visible
-  connectionStatus.classList.remove('hidden');
-  
-  const statusDot = connectionStatus.querySelector('span:first-child');
-  const statusText = connectionStatus.querySelector('span:last-child');
-  
-  switch (status) {
-    case 'connected':
-      statusDot.className = 'h-2 w-2 bg-green-500 rounded-full';
-      statusText.textContent = 'Monitoring';
-      break;
-    case 'disconnected':
-      statusDot.className = 'h-2 w-2 bg-red-500 rounded-full';
-      statusText.textContent = 'Disconnected';
-      break;
-    case 'connecting':
-      statusDot.className = 'h-2 w-2 bg-yellow-500 rounded-full';
-      statusText.textContent = 'Connecting...';
-      break;
-    case 'error':
-      statusDot.className = 'h-2 w-2 bg-red-500 rounded-full';
-      statusText.textContent = 'Connection Error';
-      break;
-    case 'disabled':
-      statusDot.className = 'h-2 w-2 bg-gray-500 rounded-full';
-      statusText.textContent = 'Offline Mode';
-      break;
-    default:
-      statusDot.className = 'h-2 w-2 bg-gray-500 rounded-full';
-      statusText.textContent = 'Unknown';
-  }
-}
 
-function initializeUI() {
-  // Check if we should stop initialization due to reload loop
-  if (window.stopInitialization) {
-    console.log('Initialization stopped to prevent reload loop');
-    return;
-  }
-  
-  // Set a flag to prevent multiple initializations
-  if (window.uiInitialized) {
-    console.log('UI already initialized, skipping');
-    return;
-  }
-  window.uiInitialized = true;
-  
-  console.log('UI initialization started');
-  
-  // Initialize theme first to prevent flashing
-  initializeTheme();
-  
-  updateConnectionStatus('connecting');
-  showLoading('Initializing', 'Setting up PYUSD Guardian...');
-  
-  // Use a timeout to fetch data after a short delay
-  setTimeout(async () => {
-    try {
-      // Fetch initial stats
-      await updateStats();
-      
-      // Fetch and render transactions and alerts
-      await renderTransactions();
-      await renderAlerts();
-      
-      // Initialize WebSocket if configured
-      initializeWebSocket();
-      
-      // Set up event listeners
-      setupEventListeners();
-      
-      // Update connection status
-      updateConnectionStatus('connected');
-    } catch (error) {
-      console.error('Failed to initialize UI:', error);
-      updateConnectionStatus('error');
-      
-      // Show empty states
-      txTableBody.innerHTML = `
+    function updateConnectionStatus(status) {
+      // Make sure the connection status is visible
+      connectionStatus.classList.remove('hidden');
+
+      const statusDot = connectionStatus.querySelector('span:first-child');
+      const statusText = connectionStatus.querySelector('span:last-child');
+
+      switch (status) {
+        case 'connected':
+          statusDot.className = 'h-2 w-2 bg-green-500 rounded-full';
+          statusText.textContent = 'Monitoring';
+          break;
+        case 'disconnected':
+          statusDot.className = 'h-2 w-2 bg-red-500 rounded-full';
+          statusText.textContent = 'Disconnected';
+          break;
+        case 'connecting':
+          statusDot.className = 'h-2 w-2 bg-yellow-500 rounded-full';
+          statusText.textContent = 'Connecting...';
+          break;
+        case 'error':
+          statusDot.className = 'h-2 w-2 bg-red-500 rounded-full';
+          statusText.textContent = 'Connection Error';
+          break;
+        case 'disabled':
+          statusDot.className = 'h-2 w-2 bg-gray-500 rounded-full';
+          statusText.textContent = 'Offline Mode';
+          break;
+        default:
+          statusDot.className = 'h-2 w-2 bg-gray-500 rounded-full';
+          statusText.textContent = 'Unknown';
+      }
+    }
+
+    function initializeUI() {
+      // Check if we should stop initialization due to reload loop
+      if (window.stopInitialization) {
+        console.log('Initialization stopped to prevent reload loop');
+        return;
+      }
+
+      // Set a flag to prevent multiple initializations
+      if (window.uiInitialized) {
+        console.log('UI already initialized, skipping');
+        return;
+      }
+      window.uiInitialized = true;
+
+      console.log('UI initialization started');
+
+      // Initialize theme first to prevent flashing
+      initializeTheme();
+
+      updateConnectionStatus('connecting');
+      showLoading('Initializing', 'Setting up PYUSD Guardian...');
+
+      // Use a timeout to fetch data after a short delay
+      setTimeout(async () => {
+        try {
+          // Fetch initial stats
+          await updateStats();
+
+          // Fetch and render transactions and alerts
+          await renderTransactions();
+          await renderAlerts();
+
+          // Initialize WebSocket if configured
+          initializeWebSocket();
+
+          // Set up event listeners
+          setupEventListeners();
+
+          // Update connection status
+          updateConnectionStatus('connected');
+        } catch (error) {
+          console.error('Failed to initialize UI:', error);
+          updateConnectionStatus('error');
+
+          // Show empty states
+          txTableBody.innerHTML = `
         <tr>
           <td colspan="4" class="px-6 py-10 text-center dark:text-gold-200/50 text-gold-700/50">
             <div class="flex flex-col items-center justify-center">
@@ -969,8 +1010,8 @@ function initializeUI() {
           </td>
         </tr>
       `;
-      
-      alertsContainer.innerHTML = `
+
+          alertsContainer.innerHTML = `
         <div class="px-6 py-10 text-center dark:text-gold-200/50 text-gold-700/50">
           <div class="flex flex-col items-center justify-center">
             <i class="fas fa-exclamation-circle mb-3 text-2xl text-red-500"></i>
@@ -978,42 +1019,42 @@ function initializeUI() {
           </div>
         </div>
       `;
-    } finally {
-      hideLoading();
+        } finally {
+          hideLoading();
+        }
+      }, 500); // Short delay to ensure DOM is ready
     }
-  }, 500); // Short delay to ensure DOM is ready
-}
 
     // Update dashboard statistics
     async function updateStats() {
-  try {
-    const stats = await fetchAPI('/stats');
-    console.log('Fetched stats:', stats);
-    currentBlockEl.textContent = stats.currentBlock;
-    pyusdTxCountEl.textContent = stats.totalTransactions;
-    flaggedTxCountEl.textContent = stats.totalFlagged;
-    monitoringSinceEl.textContent = formatDate(new Date(stats.monitoringSince));
-  } catch (error) {
-    console.error('Error updating stats:', error);
-    // Don't show an error toast for stats updates to avoid UI clutter
-  }
-}
+      try {
+        const stats = await fetchAPI('/stats');
+        console.log('Fetched stats:', stats);
+        currentBlockEl.textContent = stats.currentBlock;
+        pyusdTxCountEl.textContent = stats.totalTransactions;
+        flaggedTxCountEl.textContent = stats.totalFlagged;
+        monitoringSinceEl.textContent = formatDate(new Date(stats.monitoringSince));
+      } catch (error) {
+        console.error('Error updating stats:', error);
+        // Don't show an error toast for stats updates to avoid UI clutter
+      }
+    }
 
 
-  async function renderTransactions() {
-  try {
-    showLoading('Loading Transactions', 'Fetching transaction data...');
-    
-    // Get filter value
-    const filterValue = txFilter.value;
-    
-    // Fetch transactions directly from API with filter
-    const response = await fetchAPI(`/transactions?${filterValue}`);
-    const transactions = response.transactions || [];
-    console.log('Fetched transactions:', transactions);
-    console.log(transactions.length);
-    if (transactions.length === 0) {
-      txTableBody.innerHTML = `
+    async function renderTransactions() {
+      try {
+        showLoading('Loading Transactions', 'Fetching transaction data...');
+
+        // Get filter value
+        const filterValue = txFilter.value;
+
+        // Fetch transactions directly from API with filter
+        const response = await fetchAPI(`/transactions?${filterValue}`);
+        const transactions = response.transactions || [];
+        console.log('Fetched transactions:', transactions);
+        console.log(transactions.length);
+        if (transactions.length === 0) {
+          txTableBody.innerHTML = `
         <tr>
           <td colspan="4" class="px-6 py-10 text-center dark:text-gold-200/50 text-gold-700/50">
             <div class="flex flex-col items-center justify-center">
@@ -1023,15 +1064,15 @@ function initializeUI() {
           </td>
         </tr>
       `;
-      hideLoading();
-      return;
-    }
+          hideLoading();
+          return;
+        }
 
-    // Sort by block number (descending)
-    const sortedTxs = [...transactions].sort((a, b) => b.blockNumber - a.blockNumber);
-    
-    // Generate table rows
-    txTableBody.innerHTML = sortedTxs.map(tx => `
+        // Sort by block number (descending)
+        const sortedTxs = [...transactions].sort((a, b) => b.blockNumber - a.blockNumber);
+
+        // Generate table rows
+        txTableBody.innerHTML = sortedTxs.map(tx => `
       <tr class="${tx.flagged ? 'dark:bg-red-900/10 bg-red-50' : ''} hover:dark:bg-dark-900/20 hover:bg-gold-50/50 transition-colors duration-200">
         <td class="table-cell">
           <div class="font-mono text-sm truncate max-w-[150px] dark:text-gold-100 text-gray-800" title="${tx.txHash}">
@@ -1054,20 +1095,20 @@ function initializeUI() {
       </tr>
     `).join('');
 
-    // Add event listeners to view buttons
-    document.querySelectorAll('.view-tx').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const hash = btn.getAttribute('data-hash');
-        showTransactionDetails(hash);
-      });
-    });
-    
-    // Update stats with latest transaction count
-    updateStats();
-    
-  } catch (error) {
-    console.error('Error rendering transactions:', error);
-    txTableBody.innerHTML = `
+        // Add event listeners to view buttons
+        document.querySelectorAll('.view-tx').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const hash = btn.getAttribute('data-hash');
+            showTransactionDetails(hash);
+          });
+        });
+
+        // Update stats with latest transaction count
+        updateStats();
+
+      } catch (error) {
+        console.error('Error rendering transactions:', error);
+        txTableBody.innerHTML = `
       <tr>
         <td colspan="4" class="px-6 py-10 text-center dark:text-gold-200/50 text-gold-700/50">
           <div class="flex flex-col items-center justify-center">
@@ -1077,25 +1118,25 @@ function initializeUI() {
         </td>
       </tr>
     `;
-  } finally {
-    hideLoading();
-  }
-}
+      } finally {
+        hideLoading();
+      }
+    }
 
-// Render alerts - modified to fetch directly from API
-async function renderAlerts() {
-  try {
-    showLoading('Loading Alerts', 'Fetching alert data...');
-    
-    // Get filter value
-    const filterValue = alertFilter.value;
-    
-    // Fetch alerts directly from API with filter
-    const response = await fetchAPI(`/alerts?severity=${filterValue}`);
-    const alerts = response.data || [];
-    
-    if (alerts.length === 0) {
-      alertsContainer.innerHTML = `
+    // Render alerts - modified to fetch directly from API
+    async function renderAlerts() {
+      try {
+        showLoading('Loading Alerts', 'Fetching alert data...');
+
+        // Get filter value
+        const filterValue = alertFilter.value;
+
+        // Fetch alerts directly from API with filter
+        const response = await fetchAPI(`/alerts?severity=${filterValue}`);
+        const alerts = response.data || [];
+
+        if (alerts.length === 0) {
+          alertsContainer.innerHTML = `
         <div class="px-6 py-10 text-center dark:text-gold-200/50 text-gold-700/50">
           <div class="flex flex-col items-center justify-center">
             <i class="fas fa-bell-slash mb-3 text-2xl dark:text-gold-400/30 text-gold-400/70"></i>
@@ -1103,18 +1144,18 @@ async function renderAlerts() {
           </div>
         </div>
       `;
-      hideLoading();
-      return;
-    }
-    
-    // Sort alerts by timestamp (newest first)
-    const sortedAlerts = alerts.sort((a, b) => 
-      new Date(b.timestamp) - new Date(a.timestamp)
-    );
-    
-    alertsContainer.innerHTML = sortedAlerts.map(alert => {
-      const severity = getSeverityFromRule(alert.rule);
-      return `
+          hideLoading();
+          return;
+        }
+
+        // Sort alerts by timestamp (newest first)
+        const sortedAlerts = alerts.sort((a, b) =>
+          new Date(b.timestamp) - new Date(a.timestamp)
+        );
+
+        alertsContainer.innerHTML = sortedAlerts.map(alert => {
+          const severity = getSeverityFromRule(alert.rule);
+          return `
         <div class="card alert-item">
           <div class="flex justify-between items-start">
             <div class="flex items-start space-x-3">
@@ -1123,11 +1164,10 @@ async function renderAlerts() {
               </div>
               <div>
                 <h3 class="font-medium dark:text-gold-100 text-gray-800">${alert.rule}</h3>
-                <p class="text-sm dark:text-gold-200/70 text-gray-600 mt-1">${
-                  typeof alert.details === 'string' 
-                    ? alert.details 
-                    : JSON.stringify(alert.details).substring(0, 100) + '...'
-                }</p>
+                <p class="text-sm dark:text-gold-200/70 text-gray-600 mt-1">${typeof alert.details === 'string'
+              ? alert.details
+              : JSON.stringify(alert.details).substring(0, 100) + '...'
+            }</p>
               </div>
             </div>
             <span class="text-xs dark:text-gold-300/50 text-gold-700/70">${formatTime(new Date(alert.timestamp))}</span>
@@ -1142,19 +1182,19 @@ async function renderAlerts() {
           </div>
         </div>
       `;
-    }).join('');
+        }).join('');
 
-    // Add event listeners to view buttons in alerts
-    alertsContainer.querySelectorAll('.view-tx').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const hash = btn.getAttribute('data-hash');
-        showTransactionDetails(hash);
-      });
-    });
-    
-  } catch (error) {
-    console.error('Error rendering alerts:', error);
-    alertsContainer.innerHTML = `
+        // Add event listeners to view buttons in alerts
+        alertsContainer.querySelectorAll('.view-tx').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const hash = btn.getAttribute('data-hash');
+            showTransactionDetails(hash);
+          });
+        });
+
+      } catch (error) {
+        console.error('Error rendering alerts:', error);
+        alertsContainer.innerHTML = `
       <div class="px-6 py-10 text-center dark:text-gold-200/50 text-gold-700/50">
         <div class="flex flex-col items-center justify-center">
           <i class="fas fa-exclamation-circle mb-3 text-2xl text-red-500"></i>
@@ -1162,24 +1202,24 @@ async function renderAlerts() {
         </div>
       </div>
     `;
-  } finally {
-    hideLoading();
-  }
-}
+      } finally {
+        hideLoading();
+      }
+    }
     // Render alerts
     async function renderAlerts() {
-  try {
-    showLoading('Loading Alerts', 'Fetching alert data...');
-    
-    // Get filter value
-    const filterValue = alertFilter.value;
-    
-    // Fetch alerts directly from API with filter
-    const response = await fetchAPI(`/alerts?severity=${filterValue}`);
-    const alerts = response.alerts;
-    console.log('Fetched alerts:', alerts);
-    if (alerts.length === 0) {
-      alertsContainer.innerHTML = `
+      try {
+        showLoading('Loading Alerts', 'Fetching alert data...');
+
+        // Get filter value
+        const filterValue = alertFilter.value;
+
+        // Fetch alerts directly from API with filter
+        const response = await fetchAPI(`/alerts?severity=${filterValue}`);
+        const alerts = response.alerts;
+        console.log('Fetched alerts:', alerts);
+        if (alerts.length === 0) {
+          alertsContainer.innerHTML = `
         <div class="px-6 py-10 text-center dark:text-gold-200/50 text-gold-700/50">
           <div class="flex flex-col items-center justify-center">
             <i class="fas fa-bell-slash mb-3 text-2xl dark:text-gold-400/30 text-gold-400/70"></i>
@@ -1187,18 +1227,18 @@ async function renderAlerts() {
           </div>
         </div>
       `;
-      hideLoading();
-      return;
-    }
-    
-    // Sort alerts by timestamp (newest first)
-    const sortedAlerts = alerts.sort((a, b) => 
-      new Date(b.timestamp) - new Date(a.timestamp)
-    );
-    
-    alertsContainer.innerHTML = sortedAlerts.map(alert => {
-      const severity = getSeverityFromRule(alert.rule);
-      return `
+          hideLoading();
+          return;
+        }
+
+        // Sort alerts by timestamp (newest first)
+        const sortedAlerts = alerts.sort((a, b) =>
+          new Date(b.timestamp) - new Date(a.timestamp)
+        );
+
+        alertsContainer.innerHTML = sortedAlerts.map(alert => {
+          const severity = getSeverityFromRule(alert.rule);
+          return `
         <div class="card alert-item">
           <div class="flex justify-between items-start">
             <div class="flex items-start space-x-3">
@@ -1207,11 +1247,10 @@ async function renderAlerts() {
               </div>
               <div>
                 <h3 class="font-medium dark:text-gold-100 text-gray-800">${alert.rule}</h3>
-                <p class="text-sm dark:text-gold-200/70 text-gray-600 mt-1">${
-                  typeof alert.details === 'string' 
-                    ? alert.details 
-                    : JSON.stringify(alert.details).substring(0, 100) + '...'
-                }</p>
+                <p class="text-sm dark:text-gold-200/70 text-gray-600 mt-1">${typeof alert.details === 'string'
+              ? alert.details
+              : JSON.stringify(alert.details).substring(0, 100) + '...'
+            }</p>
               </div>
             </div>
             <span class="text-xs dark:text-gold-300/50 text-gold-700/70">${formatTime(new Date(alert.timestamp))}</span>
@@ -1226,19 +1265,19 @@ async function renderAlerts() {
           </div>
         </div>
       `;
-    }).join('');
+        }).join('');
 
-    // Add event listeners to view buttons in alerts
-    alertsContainer.querySelectorAll('.view-tx').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const hash = btn.getAttribute('data-hash');
-        showTransactionDetails(hash);
-      });
-    });
-    
-  } catch (error) {
-    console.error('Error rendering alerts:', error);
-    alertsContainer.innerHTML = `
+        // Add event listeners to view buttons in alerts
+        alertsContainer.querySelectorAll('.view-tx').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const hash = btn.getAttribute('data-hash');
+            showTransactionDetails(hash);
+          });
+        });
+
+      } catch (error) {
+        console.error('Error rendering alerts:', error);
+        alertsContainer.innerHTML = `
       <div class="px-6 py-10 text-center dark:text-gold-200/50 text-gold-700/50">
         <div class="flex flex-col items-center justify-center">
           <i class="fas fa-exclamation-circle mb-3 text-2xl text-red-500"></i>
@@ -1246,41 +1285,41 @@ async function renderAlerts() {
         </div>
       </div>
     `;
-  } finally {
-    hideLoading();
-  }
-}
-async function showTransactionDetails(hash) {
-  console.log(hash);
-  txModal.classList.remove('hidden');
-  txDetailsContent.innerHTML = `
+      } finally {
+        hideLoading();
+      }
+    }
+    async function showTransactionDetails(hash) {
+      console.log(hash);
+      txModal.classList.remove('hidden');
+      txDetailsContent.innerHTML = `
     <div class="flex justify-center items-center py-10">
       <i class="fas fa-circle-notch fa-spin text-2xl dark:text-gold-400 text-gold-600 mr-3"></i>
       <p>Loading transaction details...</p>
     </div>
   `;
-  
-  showLoading('Loading Transaction', 'Fetching transaction details...');
-  
-  try {
-    // Always fetch the full transaction details from API
-    const tx = await fetchAPI(`/transactions/${hash}`);
-    
-    // Create a trace example from the risk report if available
-    const trace = tx.riskReport?.trace || {
-      calls: [
-        {
-          type: "CALL",
-          from: tx.from || "0x0000000000000000000000000000000000000000",
-          to: tx.to || "0x0000000000000000000000000000000000000000",
-          value: "0x0",
-          gas: "0x" + Math.floor(Math.random() * 100000).toString(16),
-          input: "0xa9059cbb000000000000000000000000d8da6bf26964af9d7eed9e03e53415d37aa96045000000000000000000000000000000000000000000000000000000003b9aca00"
-        }
-      ]
-    };
 
-    txDetailsContent.innerHTML = `
+      showLoading('Loading Transaction', 'Fetching transaction details...');
+
+      try {
+        // Always fetch the full transaction details from API
+        const tx = await fetchAPI(`/transactions/${hash}`);
+
+        // Create a trace example from the risk report if available
+        const trace = tx.riskReport?.trace || {
+          calls: [
+            {
+              type: "CALL",
+              from: tx.from || "0x0000000000000000000000000000000000000000",
+              to: tx.to || "0x0000000000000000000000000000000000000000",
+              value: "0x0",
+              gas: "0x" + Math.floor(Math.random() * 100000).toString(16),
+              input: "0xa9059cbb000000000000000000000000d8da6bf26964af9d7eed9e03e53415d37aa96045000000000000000000000000000000000000000000000000000000003b9aca00"
+            }
+          ]
+        };
+
+        txDetailsContent.innerHTML = `
       <div class="space-y-6">
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-3">
@@ -1313,8 +1352,8 @@ async function showTransactionDetails(hash) {
             <h4 class="text-sm dark:text-gold-300 text-gold-700 mb-2">To</h4>
             <div class="code-block">
               <p class="break-all dark:text-gold-100 text-gray-800">${tx.to || 'Unknown'}</p>
-              ${tx.to && tx.to.toLowerCase() === PYUSD_ADDRESS.toLowerCase() ? 
-                '<span class="text-xs dark:text-gold-400 text-gold-600 mt-1 block">PYUSD Contract</span>' : ''}
+              ${tx.to && tx.to.toLowerCase() === PYUSD_ADDRESS.toLowerCase() ?
+            '<span class="text-xs dark:text-gold-400 text-gold-600 mt-1 block">PYUSD Contract</span>' : ''}
             </div>
           </div>
         </div>
@@ -1374,19 +1413,19 @@ async function showTransactionDetails(hash) {
         </div>
       </div>
     `;
-  } catch (error) {
-    console.error('Error fetching transaction details:', error);
-    txDetailsContent.innerHTML = `
+      } catch (error) {
+        console.error('Error fetching transaction details:', error);
+        txDetailsContent.innerHTML = `
       <div class="flex flex-col items-center justify-center py-10 text-center">
         <i class="fas fa-exclamation-circle text-3xl text-red-500 mb-4"></i>
         <p class="text-lg dark:text-gold-100 text-gray-800 mb-2">Failed to load transaction details</p>
         <p class="text-sm dark:text-gold-200/70 text-gray-600">${error.message || 'An unknown error occurred'}</p>
       </div>
     `;
-  } finally {
-    hideLoading();
-  }
-}
+      } finally {
+        hideLoading();
+      }
+    }
 
     // Helper function to get severity from rule name
     function getSeverityFromRule(rule) {
@@ -1435,7 +1474,7 @@ async function showTransactionDetails(hash) {
         { tab: tabAlerts, content: contentAlerts, id: 'alerts' },
         { tab: tabAnalytics, content: contentAnalytics, id: 'analytics' }
       ];
-      
+
       tabs.forEach(({ tab, content, id }) => {
         tab.addEventListener('click', () => {
           // Deactivate all tabs
@@ -1444,250 +1483,250 @@ async function showTransactionDetails(hash) {
             t.tab.classList.add('tab-inactive');
             t.content.classList.add('hidden');
           });
-          
+
           // Activate selected tab
           tab.classList.add('tab-active');
           tab.classList.remove('tab-inactive');
           content.classList.remove('hidden');
-          
+
           // Update active tab in state
           appState.activeTab = id;
         });
       });
     }
-// Set up notifications modal
-function setupNotificationsModal() {
-  // Elements (make sure these variables are defined elsewhere or add declarations)
-  const notificationsBtn = document.getElementById('notifications-btn');
-const notificationsModal = document.getElementById('notificationsModal');
-const closeNotificationsModal = document.getElementById('closeNotificationsModal');
-const notificationsForm = document.getElementById('notificationsForm');
-const emailCheckbox = document.getElementById('email-checkbox'); // Corrected ID here
-const discordCheckbox = document.getElementById('discord-checkbox'); // Corrected ID here
-const telegramCheckbox = document.getElementById('telegram-checkbox'); // Corrected ID here
-const emailField = document.getElementById('email-field'); // Corrected ID here
-const discordField = document.getElementById('discord-field'); // Corrected ID here
-const telegramField = document.getElementById('telegram-field'); // Corrected ID here
+    // Set up notifications modal
+    function setupNotificationsModal() {
+      // Elements (make sure these variables are defined elsewhere or add declarations)
+      const notificationsBtn = document.getElementById('notifications-btn');
+      const notificationsModal = document.getElementById('notificationsModal');
+      const closeNotificationsModal = document.getElementById('closeNotificationsModal');
+      const notificationsForm = document.getElementById('notificationsForm');
+      const emailCheckbox = document.getElementById('email-checkbox'); // Corrected ID here
+      const discordCheckbox = document.getElementById('discord-checkbox'); // Corrected ID here
+      const telegramCheckbox = document.getElementById('telegram-checkbox'); // Corrected ID here
+      const emailField = document.getElementById('email-field'); // Corrected ID here
+      const discordField = document.getElementById('discord-field'); // Corrected ID here
+      const telegramField = document.getElementById('telegram-field'); // Corrected ID here
 
-  // App state for notification preferences
-  if (!appState.notifications) {
-    appState.notifications = {
-      email: false,
-      discord: false,
-      telegram: false,
-      severity: 'medium',
-      frequency: 'immediate'
-    };
-  }
-  
-  // Show notifications modal
-  notificationsBtn.addEventListener('click', () => {
-    notificationsModal.classList.remove('hidden');
-    // Fetch current preferences when opening the modal
-    fetchNotificationPreferences();
-  });
-  
-  // Close notifications modal
-  closeNotificationsModal.addEventListener('click', () => {
-    notificationsModal.classList.add('hidden');
-  });
-  
-  // Close modal when clicking outside
-  notificationsModal.addEventListener('click', (e) => {
-    if (e.target === notificationsModal) {
-      notificationsModal.classList.add('hidden');
-    }
-  });
-  
-  // Toggle notification method fields
-  emailCheckbox.addEventListener('change', () => {
-    emailField.classList.toggle('hidden', !emailCheckbox.checked);
-    appState.notifications.email = emailCheckbox.checked;
-  });
-  
-  discordCheckbox.addEventListener('change', () => {
-    discordField.classList.toggle('hidden', !discordCheckbox.checked);
-    appState.notifications.discord = discordCheckbox.checked;
-  });
-  
-  telegramCheckbox.addEventListener('change', () => {
-    telegramField.classList.toggle('hidden', !telegramCheckbox.checked);
-    appState.notifications.telegram = telegramCheckbox.checked;
-  });
-  
-  // Handle form submission
-  notificationsForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    
-    // Validate form
-    let isValid = true;
-    let errorMessage = '';
-    
-    if (emailCheckbox.checked && !document.getElementById('email').value) {
-      isValid = false;
-      errorMessage = 'Please enter your email address';
-    } else if (discordCheckbox.checked && !document.getElementById('discord').value) {
-      isValid = false;
-      errorMessage = 'Please enter your Discord username';
-    } else if (telegramCheckbox.checked && !document.getElementById('telegram').value) {
-      isValid = false;
-      errorMessage = 'Please enter your Telegram username';
-    } else if (!emailCheckbox.checked && !discordCheckbox.checked && !telegramCheckbox.checked) {
-      isValid = false;
-      errorMessage = 'Please select at least one notification method';
-    }
-    
-    if (!isValid) {
-      showError(errorMessage);
-      return;
-    }
-    
-    // Collect form data
-    const formData = {
-      email: emailCheckbox.checked ? document.getElementById('email').value : null,
-      discord: discordCheckbox.checked ? document.getElementById('discord').value : null,
-      telegram: telegramCheckbox.checked ? document.getElementById('telegram').value : null,
-      severity: document.getElementById('alert-severity').value,
-      frequency: document.getElementById('alert-frequency').value
-    };
-    
-    // Show loading state
-    showLoading('Saving Preferences', 'Please wait while we update your notification settings...');
-    
-    // Send data to API
-    saveNotificationPreferences(formData);
-  });
-  
-  // Fetch current notification preferences from the API
-  async function fetchNotificationPreferences() {
-    try {
-      showLoading('Loading Preferences', 'Loading your notification settings...');
-      
-      const response = await fetch('/api/notification-preferences');
-      if (!response.ok) {
-        throw new Error('Failed to fetch notification preferences');
+      // App state for notification preferences
+      if (!appState.notifications) {
+        appState.notifications = {
+          email: false,
+          discord: false,
+          telegram: false,
+          severity: 'medium',
+          frequency: 'immediate'
+        };
       }
-      
-      const preferences = await response.json();
-      
-      // Update form values
-      if (preferences.email) {
-        emailCheckbox.checked = true;
-        document.getElementById('email').value = preferences.email;
-        emailField.classList.remove('hidden');
-      }
-      
-      if (preferences.discord) {
-        discordCheckbox.checked = true;
-        document.getElementById('discord').value = preferences.discord;
-        discordField.classList.remove('hidden');
-      }
-      
-      if (preferences.telegram) {
-        telegramCheckbox.checked = true;
-        document.getElementById('telegram').value = preferences.telegram;
-        telegramField.classList.remove('hidden');
-      }
-      
-      document.getElementById('alert-severity').value = preferences.severity || 'medium';
-      document.getElementById('alert-frequency').value = preferences.frequency || 'immediate';
-      
-      // Update app state
-      appState.notifications = {
-        email: !!preferences.email,
-        discord: !!preferences.discord,
-        telegram: !!preferences.telegram,
-        severity: preferences.severity || 'medium',
-        frequency: preferences.frequency || 'immediate'
-      };
-      
-      hideLoading();
-    } catch (error) {
-      console.error('Error fetching notification preferences:', error);
-      hideLoading();
-      showError('Failed to load notification preferences');
-    }
-  }
-  
-  // Save notification preferences to the API
-  async function saveNotificationPreferences(formData) {
-    try {
-      const response = await fetch('/api/notification-preferences', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
+
+      // Show notifications modal
+      notificationsBtn.addEventListener('click', () => {
+        notificationsModal.classList.remove('hidden');
+        // Fetch current preferences when opening the modal
+        fetchNotificationPreferences();
       });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to save notification preferences');
+
+      // Close notifications modal
+      closeNotificationsModal.addEventListener('click', () => {
+        notificationsModal.classList.add('hidden');
+      });
+
+      // Close modal when clicking outside
+      notificationsModal.addEventListener('click', (e) => {
+        if (e.target === notificationsModal) {
+          notificationsModal.classList.add('hidden');
+        }
+      });
+
+      // Toggle notification method fields
+      emailCheckbox.addEventListener('change', () => {
+        emailField.classList.toggle('hidden', !emailCheckbox.checked);
+        appState.notifications.email = emailCheckbox.checked;
+      });
+
+      discordCheckbox.addEventListener('change', () => {
+        discordField.classList.toggle('hidden', !discordCheckbox.checked);
+        appState.notifications.discord = discordCheckbox.checked;
+      });
+
+      telegramCheckbox.addEventListener('change', () => {
+        telegramField.classList.toggle('hidden', !telegramCheckbox.checked);
+        appState.notifications.telegram = telegramCheckbox.checked;
+      });
+
+      // Handle form submission
+      notificationsForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        // Validate form
+        let isValid = true;
+        let errorMessage = '';
+
+        if (emailCheckbox.checked && !document.getElementById('email').value) {
+          isValid = false;
+          errorMessage = 'Please enter your email address';
+        } else if (discordCheckbox.checked && !document.getElementById('discord').value) {
+          isValid = false;
+          errorMessage = 'Please enter your Discord username';
+        } else if (telegramCheckbox.checked && !document.getElementById('telegram').value) {
+          isValid = false;
+          errorMessage = 'Please enter your Telegram username';
+        } else if (!emailCheckbox.checked && !discordCheckbox.checked && !telegramCheckbox.checked) {
+          isValid = false;
+          errorMessage = 'Please select at least one notification method';
+        }
+
+        if (!isValid) {
+          showError(errorMessage);
+          return;
+        }
+
+        // Collect form data
+        const formData = {
+          email: emailCheckbox.checked ? document.getElementById('email').value : null,
+          discord: discordCheckbox.checked ? document.getElementById('discord').value : null,
+          telegram: telegramCheckbox.checked ? document.getElementById('telegram').value : null,
+          severity: document.getElementById('alert-severity').value,
+          frequency: document.getElementById('alert-frequency').value
+        };
+
+        // Show loading state
+        showLoading('Saving Preferences', 'Please wait while we update your notification settings...');
+
+        // Send data to API
+        saveNotificationPreferences(formData);
+      });
+
+      // Fetch current notification preferences from the API
+      async function fetchNotificationPreferences() {
+        try {
+          showLoading('Loading Preferences', 'Loading your notification settings...');
+
+          const response = await fetch('/api/notification-preferences');
+          if (!response.ok) {
+            throw new Error('Failed to fetch notification preferences');
+          }
+
+          const preferences = await response.json();
+
+          // Update form values
+          if (preferences.email) {
+            emailCheckbox.checked = true;
+            document.getElementById('email').value = preferences.email;
+            emailField.classList.remove('hidden');
+          }
+
+          if (preferences.discord) {
+            discordCheckbox.checked = true;
+            document.getElementById('discord').value = preferences.discord;
+            discordField.classList.remove('hidden');
+          }
+
+          if (preferences.telegram) {
+            telegramCheckbox.checked = true;
+            document.getElementById('telegram').value = preferences.telegram;
+            telegramField.classList.remove('hidden');
+          }
+
+          document.getElementById('alert-severity').value = preferences.severity || 'medium';
+          document.getElementById('alert-frequency').value = preferences.frequency || 'immediate';
+
+          // Update app state
+          appState.notifications = {
+            email: !!preferences.email,
+            discord: !!preferences.discord,
+            telegram: !!preferences.telegram,
+            severity: preferences.severity || 'medium',
+            frequency: preferences.frequency || 'immediate'
+          };
+
+          hideLoading();
+        } catch (error) {
+          console.error('Error fetching notification preferences:', error);
+          hideLoading();
+          showError('Failed to load notification preferences');
+        }
       }
-      
-      // Update app state
-      appState.notifications = {
-        email: !!formData.email,
-        discord: !!formData.discord,
-        telegram: !!formData.telegram,
-        severity: formData.severity,
-        frequency: formData.frequency
-      };
-      
-      hideLoading();
-      notificationsModal.classList.add('hidden');
-      showSuccess('Notification preferences saved successfully');
-    } catch (error) {
-      console.error('Error saving notification preferences:', error);
-      hideLoading();
-      showError(error.message || 'Failed to save notification preferences');
+
+      // Save notification preferences to the API
+      async function saveNotificationPreferences(formData) {
+        try {
+          const response = await fetch('/api/notification-preferences', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.error || 'Failed to save notification preferences');
+          }
+
+          // Update app state
+          appState.notifications = {
+            email: !!formData.email,
+            discord: !!formData.discord,
+            telegram: !!formData.telegram,
+            severity: formData.severity,
+            frequency: formData.frequency
+          };
+
+          hideLoading();
+          notificationsModal.classList.add('hidden');
+          showSuccess('Notification preferences saved successfully');
+        } catch (error) {
+          console.error('Error saving notification preferences:', error);
+          hideLoading();
+          showError(error.message || 'Failed to save notification preferences');
+        }
+      }
     }
-  }
-}
 
-function setupRefreshButton() {
-  refreshBtn.addEventListener('click', async () => {
-    // Show refreshing state
-    refreshBtn.disabled = true;
-    refreshBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i><span class="hidden sm:inline">Refreshing</span>';
-    showLoading('Refreshing Data', 'Fetching the latest transactions and alerts...');
+    function setupRefreshButton() {
+      refreshBtn.addEventListener('click', async () => {
+        // Show refreshing state
+        refreshBtn.disabled = true;
+        refreshBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i><span class="hidden sm:inline">Refreshing</span>';
+        showLoading('Refreshing Data', 'Fetching the latest transactions and alerts...');
 
-    try {
-      // Refresh all data from APIs
-      await updateStats();
-      await renderTransactions();
-      await renderAlerts();
-      
-      showSuccess('Data refreshed successfully');
-    } catch (error) {
-      console.error('Error refreshing data:', error);
-      showError('Failed to refresh data: ' + error.message);
-    } finally {
-      // Reset button
-      refreshBtn.disabled = false;
-      refreshBtn.innerHTML = '<i class="fas fa-sync-alt mr-2"></i><span class="hidden sm:inline">Refresh</span>';
-      hideLoading();
+        try {
+          // Refresh all data from APIs
+          await updateStats();
+          await renderTransactions();
+          await renderAlerts();
+
+          showSuccess('Data refreshed successfully');
+        } catch (error) {
+          console.error('Error refreshing data:', error);
+          showError('Failed to refresh data: ' + error.message);
+        } finally {
+          // Reset button
+          refreshBtn.disabled = false;
+          refreshBtn.innerHTML = '<i class="fas fa-sync-alt mr-2"></i><span class="hidden sm:inline">Refresh</span>';
+          hideLoading();
+        }
+      });
     }
-  });
-}
 
-// Make sure to call setupNotificationsModal() when the DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-  setupNotificationsModal();
-});
+    // Make sure to call setupNotificationsModal() when the DOM is loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      setupNotificationsModal();
+    });
 
     // Set up event listeners
     function setupEventListeners() {
       // Set up tabs
       setupTabs();
-      
+
       // Set up notifications modal
       setupNotificationsModal();
-      
+
       // Make notifications button visible
       notificationsBtn.classList.remove('hidden');
-      
+
       // Close modal
       closeModal.addEventListener('click', () => {
         txModal.classList.add('hidden');
@@ -1702,7 +1741,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Filter transactions
       txFilter.addEventListener('change', renderTransactions);
-      
+
       // Filter alerts
       alertFilter.addEventListener('change', renderAlerts);
 
@@ -1717,11 +1756,11 @@ document.addEventListener('DOMContentLoaded', () => {
           // Fetch latest status
           const status = await fetchAPI('/status');
           appState.currentBlock = status.currentBlock;
-          
+
           // Fetch latest alerts
           const alerts = await fetchAPI('/alerts');
           appState.alerts = alerts.data || [];
-          
+
           // Update transactions from alerts
           const newTransactions = appState.alerts
             .filter(alert => !appState.transactions.some(tx => tx.txHash === alert.txHash))
@@ -1736,10 +1775,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 severity: getSeverityFromRule(alert.rule)
               }]
             }));
-          
+
           // Add new transactions to the list
           appState.transactions = [...newTransactions, ...appState.transactions];
-          
+
           // Update UI
           updateStats();
           renderTransactions();
@@ -1754,7 +1793,7 @@ document.addEventListener('DOMContentLoaded', () => {
           hideLoading();
         }
       });
-      
+
       // Add global error handler
       window.addEventListener('error', (event) => {
         console.error('Global error caught:', event.error);
@@ -1762,7 +1801,7 @@ document.addEventListener('DOMContentLoaded', () => {
         event.preventDefault();
         return true;
       });
-      
+
       window.addEventListener('unhandledrejection', (event) => {
         console.error('Unhandled promise rejection:', event.reason);
         showError('An error occurred: ' + (event.reason?.message || 'Unknown error'));
@@ -1785,6 +1824,5 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('DOMContentLoaded', initializeUI);
   </script>
 </body>
+
 </html>
-
-

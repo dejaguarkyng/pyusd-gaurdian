@@ -218,8 +218,6 @@ export function setupRoutes(app, provider) {
 app.get('/api/alerts', async (req, res) => {
   try {
     const { page = 1, limit = 20, severity } = req.query;
-
-    // Build the filter query based on severity, if provided
     const filter = severity ? { severity } : {};
 
     // Fetch the alerts with pagination and optional severity filter
