@@ -667,28 +667,28 @@
       }, 5000);
     }
 
-    // Helper function for API calls with error handling
     async function fetchAPI(endpoint, options = {}, showLoadingIndicator = false) {
-      if (showLoadingIndicator) {
-        showLoading('Loading Data', 'Fetching data from the server...');
-      }
-      
-      try {
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || `API error: ${response.status}`);
-        }
-        return await response.json();
-      } catch (error) {
-        showError(`Failed to fetch data: ${error.message}`);
-        throw error;
-      } finally {
-        if (showLoadingIndicator) {
-          hideLoading();
-        }
-      }
+  if (showLoadingIndicator) {
+    showLoading('Loading Data', 'Fetching data from the server...');
+  }
+  
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `API error: ${response.status}`);
     }
+    return await response.json();
+  } catch (error) {
+    showError(`Failed to fetch data: ${error.message}`);
+    throw error;
+  } finally {
+    if (showLoadingIndicator) {
+      hideLoading();
+    }
+  }
+}
+
 
     
     function initializeWebSocket() {
@@ -997,311 +997,391 @@
         monitoringSinceEl.textContent = '-';
       }
     }
-
-    // Render transaction table
-    function renderTransactions() {
-      // Filter transactions if needed
-      const filteredTxs = txFilter.value === 'flagged' 
-        ? appState.transactions.filter(tx => tx.flagged)
-        : appState.transactions;
-      
-      if (filteredTxs.length === 0) {
-        txTableBody.innerHTML = `
-          <tr>
-            <td colspan="4" class="px-6 py-10 text-center dark:text-gold-200/50 text-gold-700/50">
-              <div class="flex flex-col items-center justify-center">
-                <i class="fas fa-search mb-3 text-2xl dark:text-gold-400/30 text-gold-400/70"></i>
-                <p>No transactions to display</p>
-              </div>
-            </td>
-          </tr>
-        `;
-        return;
-      }
-
-      // Sort by block number (descending)
-      const sortedTxs = [...filteredTxs].sort((a, b) => b.blockNumber - a.blockNumber);
-      
-      // Generate table rows
-      txTableBody.innerHTML = sortedTxs.map(tx => `
-        <tr class="${tx.flagged ? 'dark:bg-red-900/10 bg-red-50' : ''} hover:dark:bg-dark-900/20 hover:bg-gold-50/50 transition-colors duration-200">
-          <td class="table-cell">
-            <div class="font-mono text-sm truncate max-w-[150px] dark:text-gold-100 text-gray-800" title="${tx.hash}">
-              ${tx.hash.substring(0, 10)}...
+    async function renderTransactions() {
+  try {
+    showLoading('Loading Transactions', 'Fetching transaction data...');
+    
+    // Get filter value
+    const filterValue = txFilter.value;
+    
+    // Fetch transactions directly from API with filter
+    const response = await fetchAPI(`/transactions?filter=${filterValue}`);
+    const transactions = response.data || [];
+    
+    if (transactions.length === 0) {
+      txTableBody.innerHTML = `
+        <tr>
+          <td colspan="4" class="px-6 py-10 text-center dark:text-gold-200/50 text-gold-700/50">
+            <div class="flex flex-col items-center justify-center">
+              <i class="fas fa-search mb-3 text-2xl dark:text-gold-400/30 text-gold-400/70"></i>
+              <p>No transactions to display</p>
             </div>
           </td>
-          <td class="table-cell">
-            <div class="text-sm dark:text-gold-100 text-gray-800">${tx.blockNumber.toLocaleString()}</div>
-          </td>
-          <td class="table-cell">
+        </tr>
+      `;
+      hideLoading();
+      return;
+    }
+
+    // Sort by block number (descending)
+    const sortedTxs = [...transactions].sort((a, b) => b.blockNumber - a.blockNumber);
+    
+    // Generate table rows
+    txTableBody.innerHTML = sortedTxs.map(tx => `
+      <tr class="${tx.flagged ? 'dark:bg-red-900/10 bg-red-50' : ''} hover:dark:bg-dark-900/20 hover:bg-gold-50/50 transition-colors duration-200">
+        <td class="table-cell">
+          <div class="font-mono text-sm truncate max-w-[150px] dark:text-gold-100 text-gray-800" title="${tx.hash}">
+            ${tx.hash.substring(0, 10)}...
+          </div>
+        </td>
+        <td class="table-cell">
+          <div class="text-sm dark:text-gold-100 text-gray-800">${tx.blockNumber.toLocaleString()}</div>
+        </td>
+        <td class="table-cell">
+          <span class="status-badge ${tx.flagged ? 'status-flagged' : 'status-compliant'}">
+            ${tx.flagged ? 'Flagged' : 'Compliant'}
+          </span>
+        </td>
+        <td class="table-cell text-right">
+          <button class="dark:text-gold-400 text-gold-600 hover:text-gold-500 text-sm view-tx px-3 py-1 rounded-md hover:bg-gold-100/20 transition-colors" data-hash="${tx.hash}">
+            View Details
+          </button>
+        </td>
+      </tr>
+    `).join('');
+
+    // Add event listeners to view buttons
+    document.querySelectorAll('.view-tx').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const hash = btn.getAttribute('data-hash');
+        showTransactionDetails(hash);
+      });
+    });
+    
+    // Update stats with latest transaction count
+    updateStats();
+    
+  } catch (error) {
+    console.error('Error rendering transactions:', error);
+    txTableBody.innerHTML = `
+      <tr>
+        <td colspan="4" class="px-6 py-10 text-center dark:text-gold-200/50 text-gold-700/50">
+          <div class="flex flex-col items-center justify-center">
+            <i class="fas fa-exclamation-circle mb-3 text-2xl text-red-500"></i>
+            <p>Failed to load transactions</p>
+          </div>
+        </td>
+      </tr>
+    `;
+  } finally {
+    hideLoading();
+  }
+}
+
+// Render alerts - modified to fetch directly from API
+async function renderAlerts() {
+  try {
+    showLoading('Loading Alerts', 'Fetching alert data...');
+    
+    // Get filter value
+    const filterValue = alertFilter.value;
+    
+    // Fetch alerts directly from API with filter
+    const response = await fetchAPI(`/alerts?severity=${filterValue}`);
+    const alerts = response.data || [];
+    
+    if (alerts.length === 0) {
+      alertsContainer.innerHTML = `
+        <div class="px-6 py-10 text-center dark:text-gold-200/50 text-gold-700/50">
+          <div class="flex flex-col items-center justify-center">
+            <i class="fas fa-bell-slash mb-3 text-2xl dark:text-gold-400/30 text-gold-400/70"></i>
+            <p>No alerts to display</p>
+          </div>
+        </div>
+      `;
+      hideLoading();
+      return;
+    }
+    
+    // Sort alerts by timestamp (newest first)
+    const sortedAlerts = alerts.sort((a, b) => 
+      new Date(b.timestamp) - new Date(a.timestamp)
+    );
+    
+    alertsContainer.innerHTML = sortedAlerts.map(alert => {
+      const severity = getSeverityFromRule(alert.rule);
+      return `
+        <div class="card alert-item">
+          <div class="flex justify-between items-start">
+            <div class="flex items-start space-x-3">
+              <div class="mt-1">
+                <i class="fas fa-exclamation-triangle ${getSeverityColor(severity)}"></i>
+              </div>
+              <div>
+                <h3 class="font-medium dark:text-gold-100 text-gray-800">${alert.rule}</h3>
+                <p class="text-sm dark:text-gold-200/70 text-gray-600 mt-1">${
+                  typeof alert.details === 'string' 
+                    ? alert.details 
+                    : JSON.stringify(alert.details).substring(0, 100) + '...'
+                }</p>
+              </div>
+            </div>
+            <span class="text-xs dark:text-gold-300/50 text-gold-700/70">${formatTime(new Date(alert.timestamp))}</span>
+          </div>
+          <div class="mt-3 flex items-center justify-between">
+            <span class="status-badge ${getSeverityBgColor(severity)}">
+              ${severity} Risk
+            </span>
+            <button class="dark:text-gold-400 text-gold-600 hover:text-gold-500 text-xs view-tx px-2 py-1 rounded-md hover:bg-gold-100/20 transition-colors" data-hash="${alert.txHash}">
+              View Transaction
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Add event listeners to view buttons in alerts
+    alertsContainer.querySelectorAll('.view-tx').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const hash = btn.getAttribute('data-hash');
+        showTransactionDetails(hash);
+      });
+    });
+    
+  } catch (error) {
+    console.error('Error rendering alerts:', error);
+    alertsContainer.innerHTML = `
+      <div class="px-6 py-10 text-center dark:text-gold-200/50 text-gold-700/50">
+        <div class="flex flex-col items-center justify-center">
+          <i class="fas fa-exclamation-circle mb-3 text-2xl text-red-500"></i>
+          <p>Failed to load alerts</p>
+        </div>
+      </div>
+    `;
+  } finally {
+    hideLoading();
+  }
+}
+    // Render alerts
+    async function renderAlerts() {
+  try {
+    showLoading('Loading Alerts', 'Fetching alert data...');
+    
+    // Get filter value
+    const filterValue = alertFilter.value;
+    
+    // Fetch alerts directly from API with filter
+    const response = await fetchAPI(`/alerts?severity=${filterValue}`);
+    const alerts = response.data || [];
+    
+    if (alerts.length === 0) {
+      alertsContainer.innerHTML = `
+        <div class="px-6 py-10 text-center dark:text-gold-200/50 text-gold-700/50">
+          <div class="flex flex-col items-center justify-center">
+            <i class="fas fa-bell-slash mb-3 text-2xl dark:text-gold-400/30 text-gold-400/70"></i>
+            <p>No alerts to display</p>
+          </div>
+        </div>
+      `;
+      hideLoading();
+      return;
+    }
+    
+    // Sort alerts by timestamp (newest first)
+    const sortedAlerts = alerts.sort((a, b) => 
+      new Date(b.timestamp) - new Date(a.timestamp)
+    );
+    
+    alertsContainer.innerHTML = sortedAlerts.map(alert => {
+      const severity = getSeverityFromRule(alert.rule);
+      return `
+        <div class="card alert-item">
+          <div class="flex justify-between items-start">
+            <div class="flex items-start space-x-3">
+              <div class="mt-1">
+                <i class="fas fa-exclamation-triangle ${getSeverityColor(severity)}"></i>
+              </div>
+              <div>
+                <h3 class="font-medium dark:text-gold-100 text-gray-800">${alert.rule}</h3>
+                <p class="text-sm dark:text-gold-200/70 text-gray-600 mt-1">${
+                  typeof alert.details === 'string' 
+                    ? alert.details 
+                    : JSON.stringify(alert.details).substring(0, 100) + '...'
+                }</p>
+              </div>
+            </div>
+            <span class="text-xs dark:text-gold-300/50 text-gold-700/70">${formatTime(new Date(alert.timestamp))}</span>
+          </div>
+          <div class="mt-3 flex items-center justify-between">
+            <span class="status-badge ${getSeverityBgColor(severity)}">
+              ${severity} Risk
+            </span>
+            <button class="dark:text-gold-400 text-gold-600 hover:text-gold-500 text-xs view-tx px-2 py-1 rounded-md hover:bg-gold-100/20 transition-colors" data-hash="${alert.txHash}">
+              View Transaction
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Add event listeners to view buttons in alerts
+    alertsContainer.querySelectorAll('.view-tx').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const hash = btn.getAttribute('data-hash');
+        showTransactionDetails(hash);
+      });
+    });
+    
+  } catch (error) {
+    console.error('Error rendering alerts:', error);
+    alertsContainer.innerHTML = `
+      <div class="px-6 py-10 text-center dark:text-gold-200/50 text-gold-700/50">
+        <div class="flex flex-col items-center justify-center">
+          <i class="fas fa-exclamation-circle mb-3 text-2xl text-red-500"></i>
+          <p>Failed to load alerts</p>
+        </div>
+      </div>
+    `;
+  } finally {
+    hideLoading();
+  }
+}
+async function showTransactionDetails(hash) {
+  txModal.classList.remove('hidden');
+  txDetailsContent.innerHTML = `
+    <div class="flex justify-center items-center py-10">
+      <i class="fas fa-circle-notch fa-spin text-2xl dark:text-gold-400 text-gold-600 mr-3"></i>
+      <p>Loading transaction details...</p>
+    </div>
+  `;
+  
+  showLoading('Loading Transaction', 'Fetching transaction details...');
+  
+  try {
+    // Always fetch the full transaction details from API
+    const tx = await fetchAPI(`/transactions/${hash}`);
+    
+    // Create a trace example from the risk report if available
+    const trace = tx.riskReport?.trace || {
+      calls: [
+        {
+          type: "CALL",
+          from: tx.from || "0x0000000000000000000000000000000000000000",
+          to: tx.to || "0x0000000000000000000000000000000000000000",
+          value: "0x0",
+          gas: "0x" + Math.floor(Math.random() * 100000).toString(16),
+          input: "0xa9059cbb000000000000000000000000d8da6bf26964af9d7eed9e03e53415d37aa96045000000000000000000000000000000000000000000000000000000003b9aca00"
+        }
+      ]
+    };
+
+    txDetailsContent.innerHTML = `
+      <div class="space-y-6">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-3">
             <span class="status-badge ${tx.flagged ? 'status-flagged' : 'status-compliant'}">
               ${tx.flagged ? 'Flagged' : 'Compliant'}
             </span>
-          </td>
-          <td class="table-cell text-right">
-            <button class="dark:text-gold-400 text-gold-600 hover:text-gold-500 text-sm view-tx px-3 py-1 rounded-md hover:bg-gold-100/20 transition-colors" data-hash="${tx.hash}">
-              View Details
-            </button>
-          </td>
-        </tr>
-      `).join('');
-
-      // Add event listeners to view buttons
-      document.querySelectorAll('.view-tx').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const hash = btn.getAttribute('data-hash');
-          showTransactionDetails(hash);
-        });
-      });
-    }
-
-    // Render alerts
-    function renderAlerts() {
-      if (appState.alerts.length === 0) {
-        alertsContainer.innerHTML = `
-          <div class="px-6 py-10 text-center dark:text-gold-200/50 text-gold-700/50">
-            <div class="flex flex-col items-center justify-center">
-              <i class="fas fa-bell-slash mb-3 text-2xl dark:text-gold-400/30 text-gold-400/70"></i>
-              <p>No alerts to display</p>
-            </div>
+            <span class="text-sm dark:text-gold-300 text-gold-700">Block #${tx.blockNumber.toLocaleString()}</span>
           </div>
-        `;
-        return;
-      }
-
-      // Filter alerts if needed
-      let filteredAlerts = [...appState.alerts];
-      if (alertFilter.value !== 'all') {
-        filteredAlerts = filteredAlerts.filter(alert => 
-          getSeverityFromRule(alert.rule).toLowerCase() === alertFilter.value
-        );
-      }
-      
-      if (filteredAlerts.length === 0) {
-        alertsContainer.innerHTML = `
-          <div class="px-6 py-10 text-center dark:text-gold-200/50 text-gold-700/50">
-            <div class="flex flex-col items-center justify-center">
-              <i class="fas fa-filter mb-3 text-2xl dark:text-gold-400/30 text-gold-400/70"></i>
-              <p>No alerts match the selected filter</p>
-            </div>
-          </div>
-        `;
-        return;
-      }
-
-      // Sort alerts by timestamp (newest first)
-      const sortedAlerts = filteredAlerts.sort((a, b) => 
-        new Date(b.timestamp) - new Date(a.timestamp)
-      );
-      
-      alertsContainer.innerHTML = sortedAlerts.map(alert => {
-        const severity = getSeverityFromRule(alert.rule);
-        return `
-          <div class="card alert-item">
-            <div class="flex justify-between items-start">
-              <div class="flex items-start space-x-3">
-                <div class="mt-1">
-                  <i class="fas fa-exclamation-triangle ${getSeverityColor(severity)}"></i>
-                </div>
-                <div>
-                  <h3 class="font-medium dark:text-gold-100 text-gray-800">${alert.rule}</h3>
-                  <p class="text-sm dark:text-gold-200/70 text-gray-600 mt-1">${
-                    typeof alert.details === 'string' 
-                      ? alert.details 
-                      : JSON.stringify(alert.details).substring(0, 100) + '...'
-                  }</p>
-                </div>
-              </div>
-              <span class="text-xs dark:text-gold-300/50 text-gold-700/70">${formatTime(new Date(alert.timestamp))}</span>
-            </div>
-            <div class="mt-3 flex items-center justify-between">
-              <span class="status-badge ${getSeverityBgColor(severity)}">
-                ${severity} Risk
-              </span>
-              <button class="dark:text-gold-400 text-gold-600 hover:text-gold-500 text-xs view-tx px-2 py-1 rounded-md hover:bg-gold-100/20 transition-colors" data-hash="${alert.txHash}">
-                View Transaction
-              </button>
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      // Add event listeners to view buttons in alerts
-      alertsContainer.querySelectorAll('.view-tx').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const hash = btn.getAttribute('data-hash');
-          showTransactionDetails(hash);
-        });
-      });
-    }
-
-    // Show transaction details in modal
-    async function showTransactionDetails(hash) {
-      txModal.classList.remove('hidden');
-      txDetailsContent.innerHTML = `
-        <div class="flex justify-center items-center py-10">
-          <i class="fas fa-circle-notch fa-spin text-2xl dark:text-gold-400 text-gold-600 mr-3"></i>
-          <p>Loading transaction details...</p>
+          <a href="https://etherscan.io/tx/${tx.hash}" target="_blank" class="dark:text-gold-400 text-gold-600 hover:text-gold-500 text-sm flex items-center px-3 py-1 rounded-md hover:bg-gold-100/20 transition-colors">
+            View on Etherscan
+            <i class="fas fa-external-link-alt ml-1"></i>
+          </a>
         </div>
-      `;
-      
-      showLoading('Loading Transaction', 'Fetching transaction details...');
-      
-      try {
-        // Find transaction in local state first
-        let tx = appState.transactions.find(t => t.hash === hash);
-        
-        // If not found or we need more details, fetch from API
-        if (!tx || !tx.details) {
-          const alertData = await fetchAPI(`/alerts/${hash}`);
-          
-          // Create or update transaction object
-          tx = {
-            hash: alertData.txHash,
-            blockNumber: alertData.blockNumber,
-            flagged: true,
-            timestamp: new Date(alertData.timestamp),
-            from: alertData.riskReport?.from || 'Unknown',
-            to: alertData.riskReport?.to || 'Unknown',
-            method: alertData.riskReport?.method || 'Unknown',
-            value: alertData.riskReport?.value || 0,
-            gasUsed: alertData.riskReport?.gasUsed || 0,
-            complianceFlags: [{
-              rule: alertData.rule,
-              details: alertData.details,
-              severity: getSeverityFromRule(alertData.rule)
-            }],
-            riskReport: alertData.riskReport
-          };
-          
-          // Update in our local state
-          const existingIndex = appState.transactions.findIndex(t => t.hash === hash);
-          if (existingIndex >= 0) {
-            appState.transactions[existingIndex] = tx;
-          }
-        }
-        
-        // Create a trace example from the risk report if available
-        const trace = tx.riskReport?.trace || {
-          calls: [
-            {
-              type: "CALL",
-              from: tx.from || "0x0000000000000000000000000000000000000000",
-              to: tx.to || "0x0000000000000000000000000000000000000000",
-              value: "0x0",
-              gas: "0x" + Math.floor(Math.random() * 100000).toString(16),
-              input: "0xa9059cbb000000000000000000000000d8da6bf26964af9d7eed9e03e53415d37aa96045000000000000000000000000000000000000000000000000000000003b9aca00"
-            }
-          ]
-        };
 
-        txDetailsContent.innerHTML = `
-          <div class="space-y-6">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center space-x-3">
-                <span class="status-badge ${tx.flagged ? 'status-flagged' : 'status-compliant'}">
-                  ${tx.flagged ? 'Flagged' : 'Compliant'}
-                </span>
-                <span class="text-sm dark:text-gold-300 text-gold-700">Block #${tx.blockNumber.toLocaleString()}</span>
-              </div>
-              <a href="https://etherscan.io/tx/${tx.hash}" target="_blank" class="dark:text-gold-400 text-gold-600 hover:text-gold-500 text-sm flex items-center px-3 py-1 rounded-md hover:bg-gold-100/20 transition-colors">
-                View on Etherscan
-                <i class="fas fa-external-link-alt ml-1"></i>
-              </a>
+        <div>
+          <h4 class="text-sm dark:text-gold-300 text-gold-700 mb-2">Transaction Hash</h4>
+          <div class="code-block">
+            <p class="break-all dark:text-gold-100 text-gray-800">${tx.hash}</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <h4 class="text-sm dark:text-gold-300 text-gold-700 mb-2">From</h4>
+            <div class="code-block">
+              <p class="break-all dark:text-gold-100 text-gray-800">${tx.from || 'Unknown'}</p>
             </div>
-
-            <div>
-              <h4 class="text-sm dark:text-gold-300 text-gold-700 mb-2">Transaction Hash</h4>
-              <div class="code-block">
-                <p class="break-all dark:text-gold-100 text-gray-800">${tx.hash}</p>
-              </div>
+          </div>
+          <div>
+            <h4 class="text-sm dark:text-gold-300 text-gold-700 mb-2">To</h4>
+            <div class="code-block">
+              <p class="break-all dark:text-gold-100 text-gray-800">${tx.to || 'Unknown'}</p>
+              ${tx.to && tx.to.toLowerCase() === PYUSD_ADDRESS.toLowerCase() ? 
+                '<span class="text-xs dark:text-gold-400 text-gold-600 mt-1 block">PYUSD Contract</span>' : ''}
             </div>
+          </div>
+        </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <h4 class="text-sm dark:text-gold-300 text-gold-700 mb-2">From</h4>
-                <div class="code-block">
-                  <p class="break-all dark:text-gold-100 text-gray-800">${tx.from || 'Unknown'}</p>
-                </div>
-              </div>
-              <div>
-                <h4 class="text-sm dark:text-gold-300 text-gold-700 mb-2">To</h4>
-                <div class="code-block">
-                  <p class="break-all dark:text-gold-100 text-gray-800">${tx.to || 'Unknown'}</p>
-                  ${tx.to && tx.to.toLowerCase() === PYUSD_ADDRESS.toLowerCase() ? 
-                    '<span class="text-xs dark:text-gold-400 text-gold-600 mt-1 block">PYUSD Contract</span>' : ''}
-                </div>
-              </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <h4 class="text-sm dark:text-gold-300 text-gold-700 mb-2">Method</h4>
+            <div class="code-block">
+              <p class="dark:text-gold-100 text-gray-800">${tx.method || 'Unknown'}${tx.method ? '()' : ''}</p>
             </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <h4 class="text-sm dark:text-gold-300 text-gold-700 mb-2">Method</h4>
-                <div class="code-block">
-                  <p class="dark:text-gold-100 text-gray-800">${tx.method || 'Unknown'}${tx.method ? '()' : ''}</p>
-                </div>
-              </div>
-              <div>
-                <h4 class="text-sm dark:text-gold-300 text-gold-700 mb-2">Value</h4>
-                <div class="code-block">
-                  <p class="dark:text-gold-100 text-gray-800">${tx.value || 0} PYUSD</p>
-                </div>
-              </div>
-              <div>
-                <h4 class="text-sm dark:text-gold-300 text-gold-700 mb-2">Gas Used</h4>
-                <div class="code-block">
-                  <p class="dark:text-gold-100 text-gray-800">${tx.gasUsed ? tx.gasUsed.toLocaleString() : 'Unknown'}</p>
-                </div>
-              </div>
+          </div>
+          <div>
+            <h4 class="text-sm dark:text-gold-300 text-gold-700 mb-2">Value</h4>
+            <div class="code-block">
+              <p class="dark:text-gold-100 text-gray-800">${tx.value || 0} PYUSD</p>
             </div>
+          </div>
+          <div>
+            <h4 class="text-sm dark:text-gold-300 text-gold-700 mb-2">Gas Used</h4>
+            <div class="code-block">
+              <p class="dark:text-gold-100 text-gray-800">${tx.gasUsed ? tx.gasUsed.toLocaleString() : 'Unknown'}</p>
+            </div>
+          </div>
+        </div>
 
-            ${tx.flagged && tx.complianceFlags && tx.complianceFlags.length > 0 ? `
-              <div class="border-t dark:border-gold-800/30 border-gold-300/50 pt-6 mt-6">
-                <h4 class="font-serif text-lg gold-text mb-4">Compliance Flags</h4>
-                ${tx.complianceFlags.map(flag => `
-                  <div class="dark:bg-dark-900 bg-gold-50 rounded-md border dark:border-gold-800/30 border-gold-300/50 p-4 mb-3">
-                    <div class="flex items-start">
-                      <div class="flex-shrink-0 mr-3 mt-1">
-                        <i class="fas fa-exclamation-triangle ${getSeverityColor(flag.severity)}"></i>
-                      </div>
-                      <div class="flex-1">
-                        <h3 class="text-sm font-medium dark:text-gold-100 text-gray-800">${flag.rule}</h3>
-                        <div class="mt-2 text-sm dark:text-gold-200/70 text-gray-600">
-                          <p>${typeof flag.details === 'string' ? flag.details : JSON.stringify(flag.details, null, 2)}</p>
-                        </div>
-                        <div class="mt-3">
-                          <span class="status-badge ${getSeverityBgColor(flag.severity)}">
-                            ${flag.severity} Risk
-                          </span>
-                        </div>
-                      </div>
+        ${tx.flagged && tx.complianceFlags && tx.complianceFlags.length > 0 ? `
+          <div class="border-t dark:border-gold-800/30 border-gold-300/50 pt-6 mt-6">
+            <h4 class="font-serif text-lg gold-text mb-4">Compliance Flags</h4>
+            ${tx.complianceFlags.map(flag => `
+              <div class="dark:bg-dark-900 bg-gold-50 rounded-md border dark:border-gold-800/30 border-gold-300/50 p-4 mb-3">
+                <div class="flex items-start">
+                  <div class="flex-shrink-0 mr-3 mt-1">
+                    <i class="fas fa-exclamation-triangle ${getSeverityColor(flag.severity)}"></i>
+                  </div>
+                  <div class="flex-1">
+                    <h3 class="text-sm font-medium dark:text-gold-100 text-gray-800">${flag.rule}</h3>
+                    <div class="mt-2 text-sm dark:text-gold-200/70 text-gray-600">
+                      <p>${typeof flag.details === 'string' ? flag.details : JSON.stringify(flag.details, null, 2)}</p>
+                    </div>
+                    <div class="mt-3">
+                      <span class="status-badge ${getSeverityBgColor(flag.severity)}">
+                        ${flag.severity} Risk
+                      </span>
                     </div>
                   </div>
-                `).join('')}
+                </div>
               </div>
-            ` : ''}
+            `).join('')}
+          </div>
+        ` : ''}
 
-            <div class="border-t dark:border-gold-800/30 border-gold-300/50 pt-6 mt-6">
-              <h4 class="font-serif text-lg gold-text mb-4">Transaction Trace</h4>
-              <div class="code-block overflow-x-auto">
-                <pre class="text-xs dark:text-gold-100/80 text-gray-800">${JSON.stringify(trace, null, 2)}</pre>
-              </div>
-            </div>
+        <div class="border-t dark:border-gold-800/30 border-gold-300/50 pt-6 mt-6">
+          <h4 class="font-serif text-lg gold-text mb-4">Transaction Trace</h4>
+          <div class="code-block overflow-x-auto">
+            <pre class="text-xs dark:text-gold-100/80 text-gray-800">${JSON.stringify(trace, null, 2)}</pre>
           </div>
-        `;
-      } catch (error) {
-        console.error('Error fetching transaction details:', error);
-        txDetailsContent.innerHTML = `
-          <div class="flex flex-col items-center justify-center py-10 text-center">
-            <i class="fas fa-exclamation-circle text-3xl text-red-500 mb-4"></i>
-            <p class="text-lg dark:text-gold-100 text-gray-800 mb-2">Failed to load transaction details</p>
-            <p class="text-sm dark:text-gold-200/70 text-gray-600">${error.message || 'An unknown error occurred'}</p>
-          </div>
-        `;
-      } finally {
-        hideLoading();
-      }
-    }
+        </div>
+      </div>
+    `;
+  } catch (error) {
+    console.error('Error fetching transaction details:', error);
+    txDetailsContent.innerHTML = `
+      <div class="flex flex-col items-center justify-center py-10 text-center">
+        <i class="fas fa-exclamation-circle text-3xl text-red-500 mb-4"></i>
+        <p class="text-lg dark:text-gold-100 text-gray-800 mb-2">Failed to load transaction details</p>
+        <p class="text-sm dark:text-gold-200/70 text-gray-600">${error.message || 'An unknown error occurred'}</p>
+      </div>
+    `;
+  } finally {
+    hideLoading();
+  }
+}
 
     // Helper function to get severity from rule name
     function getSeverityFromRule(rule) {
