@@ -220,14 +220,30 @@
       </div>
 
       <!-- Tabs -->
-      <div class="card mb-6">
-        <div class="border-b dark:border-gold-800/30 border-gold-300/50">
+      <div class="card mb-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+        <div class="border-b border-amber-300/50 dark:border-amber-800/30">
           <div class="flex overflow-x-auto">
-            <div id="tab-transactions" class="tab tab-active">Transactions</div>
-            <div id="tab-alerts" class="tab tab-inactive">Alerts</div>
-            <div id="tab-analytics" class="tab tab-inactive">Analytics</div>
+            <div id="tab-transactions" class="px-6 py-3 text-amber-800 dark:text-amber-300 font-medium border-b-2 border-amber-500 cursor-pointer transition-colors duration-150 whitespace-nowrap flex items-center">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+              </svg>
+              Transactions
+            </div>
+            <div id="tab-alerts" class="px-6 py-3 text-gray-500 dark:text-gray-400 font-medium hover:text-amber-700 dark:hover:text-amber-200 cursor-pointer transition-colors duration-150 whitespace-nowrap flex items-center">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+              </svg>
+              Alerts
+            </div>
+            <div id="tab-analytics" class="px-6 py-3 text-gray-500 dark:text-gray-400 font-medium hover:text-amber-700 dark:hover:text-amber-200 cursor-pointer transition-colors duration-150 whitespace-nowrap flex items-center">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+              </svg>
+              Analytics
+            </div>
           </div>
         </div>
+      </div>
         
         <!-- Tab Content -->
         <div id="tab-content" class="p-4">

@@ -87,7 +87,7 @@ const Transaction = mongoose.model('Transaction', TransactionSchema);
 
 export async function getTransactionByHash(txHash) {
   try {
-    const transaction = await Transaction.findOne({ hash: txHash });
+    const transaction = await Transaction.findOne({ txHash: txHash });
 
     if (transaction) {
       console.log(`[INFO] Transaction found for hash: ${txHash}`);
