@@ -315,42 +315,58 @@ NotificationPreferencesSchema.pre('save', function(next) {
 const NotificationPreference = mongoose.model('NotificationPreference', NotificationPreferencesSchema);
 
 // Save notification preferences to database
-export async function saveNotificationPreferences(userId, preferencesData) {
+export async function saveNotificationPreferences(preferencesData) {
   try {
-    // Make sure at least one notification method is provided
-    const hasNotificationMethod = preferencesData.email || 
-                                 preferencesData.discord || 
-                                 preferencesData.telegram;
-    
-    if (!hasNotificationMethod) {
+    const { email, discord, telegram, severity, frequency } = preferencesData;
+
+    // Ensure at least one notification method is provided
+    if (!email && !discord && !telegram) {
       throw new Error('At least one notification method must be provided');
     }
-    
-    // Set the userId
-    preferencesData.userId = userId;
-    
-    // Update or create the notification preferences
-    const preferences = await NotificationPreference.findOneAndUpdate(
-      { userId },
-      preferencesData,
-      { 
+
+    const query = { $or: [] };
+    if (email) query.$or.push({ email });
+    if (discord) query.$or.push({ discord });
+    if (telegram) query.$or.push({ telegram });
+
+    // Update or insert the preferences
+    const updatedPreferences = await NotificationPreference.findOneAndUpdate(
+      query,
+      {
+        email,
+        discord,
+        telegram,
+        severity: severity || 'medium',
+        frequency: frequency || 'immediate'
+      },
+      {
         new: true,
         upsert: true,
         runValidators: true,
         setDefaultsOnInsert: true
       }
     );
-    
-    return preferences;
+
+    return updatedPreferences;
   } catch (error) {
     throw error;
   }
 }
 
 // Get notification preferences by userId
-export async function getNotificationPreferences(userId) {
+export async function getNotificationPreferences({ email, discord, telegram }) {
   try {
-    const preferences = await NotificationPreference.findOne({ userId }).lean();
+    const query = {
+      $or: []
+    };
+
+    if (email) query.$or.push({ email });
+    if (discord) query.$or.push({ discord });
+    if (telegram) query.$or.push({ telegram });
+
+    if (query.$or.length === 0) return null;
+
+    const preferences = await NotificationPreference.findOne(query).lean();
     return preferences || null;
   } catch (error) {
     throw error;

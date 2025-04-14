@@ -363,33 +363,31 @@ export function setupRoutes(app, provider) {
     }
   });
 
-  // Get user notification preferences
-  app.get('/api/notification-preferences', async (req, res) => {
+
+  app.post('/api/notification-preferences', async (req, res) => {
     try {
-      // Get the user ID (this would typically come from authentication)
-      // For now, we'll use a default user ID for demonstration
-      const userId = req.user?.id || 'default-user';
-
-      // Fetch from database
-      const preferences = await getNotificationPreferences(userId);
-
-      if (!preferences) {
-        // Return default preferences if none are found
-        return res.json({
-          email: null,
-          discord: null,
-          telegram: null,
-          severity: 'medium',
-          frequency: 'immediate'
-        });
+      const { email, discord, telegram, severity = 'medium', frequency = 'immediate' } = req.body;
+  
+      if (!email && !discord && !telegram) {
+        return res.status(400).json({ error: 'You must provide at least one contact method' });
       }
-
-      res.json(preferences);
+  
+      const existing = await getNotificationPreferences({ email, discord, telegram });
+  
+      if (existing) {
+        logger.warn('Overwriting existing preferences for contact', { email, discord, telegram });
+      }
+  
+      await saveNotificationPreferences({ email, discord, telegram, severity, frequency });
+  
+      res.json({ success: true, message: existing ? 'Preferences updated' : 'Preferences saved' });
     } catch (error) {
-      logger.error('Error fetching notification preferences', { error: error.message });
-      res.status(500).json({ error: error.message || 'Failed to fetch notification preferences' });
+      logger.error('Error saving notification preferences', { error: error.message });
+      res.status(500).json({ error: error.message || 'Failed to save notification preferences' });
     }
   });
+  
+
   app.get('/api/stats', async (req, res) => {
     try {
       const currentBlock = await provider.getBlockNumber();
