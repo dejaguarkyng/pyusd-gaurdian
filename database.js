@@ -40,6 +40,10 @@ const AlertSchema = new mongoose.Schema({
   riskReport: {
     type: Object,
     required: true
+  },
+  severity: {
+    type: String,
+    required: true
   }
 });
 // Define Transaction Schema

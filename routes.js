@@ -7,7 +7,8 @@ import {
   saveNotificationPreferences,
   getNotificationPreferences,
   deleteNotificationPreferences,
-  getTransactions, getTransactionByHash,
+  getTransactions,
+   getTransactionByHash,
   getTotalTransactionCount,
   getTotalAlertCount,
   getMonitoringStartTime,
@@ -218,7 +219,9 @@ export function setupRoutes(app, provider) {
 app.get('/api/alerts', async (req, res) => {
   try {
     const { page = 1, limit = 20, severity } = req.query;
-    const filter = severity ? { severity } : {};
+    
+    // Prepare filter for severity, defaulting to empty if no severity is passed
+    const filter = severity && ['low', 'medium', 'high'].includes(severity) ? { severity } : {};
 
     // Fetch the alerts with pagination and optional severity filter
     const alerts = await getAlerts(parseInt(page), parseInt(limit), filter);

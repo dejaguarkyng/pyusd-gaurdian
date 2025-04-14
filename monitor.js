@@ -166,7 +166,7 @@ async function processTransaction(tx, blockNumber, io) {
           rule: complianceFlags.map(f => f.rule),
           details: complianceFlags.map(f => f.details),
           riskReport: report,
-          severity, // Adding severity to alert
+          severity, 
         };
 
         try {
