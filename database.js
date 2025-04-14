@@ -186,18 +186,19 @@ export async function getTransactions(page = 1, limit = 20) {
 }
 
 // Get paginated alerts
-export async function getAlerts(page = 1, limit = 20) {
+export async function getAlerts(page = 1, limit = 20, filter = {}) {
   const skip = (page - 1) * limit;
-  
+
+  // Use the filter to apply the severity or other criteria to the query
   const [alerts, total] = await Promise.all([
-    Alert.find()
+    Alert.find(filter) // Apply the filter here
       .sort({ timestamp: -1 })
       .skip(skip)
       .limit(limit)
       .lean(),
-    Alert.countDocuments()
+    Alert.countDocuments(filter) // Apply the filter to the count as well
   ]);
-  
+
   return {
     alerts,
     pagination: {
