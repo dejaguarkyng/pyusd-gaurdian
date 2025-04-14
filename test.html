@@ -396,133 +396,132 @@
       </div>
     </div>
   </div>
-
-  <!-- Notifications Sign-up Modal -->
-  <div id="notificationsModal"
-    class="fixed inset-0 dark:bg-black/80 bg-black/50 backdrop-blur-sm flex items-center justify-center hidden z-50">
-    <div
-      class="dark:bg-dark-800 bg-white rounded-lg border dark:border-gold-700/50 border-gold-300/50 max-w-xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-xl">
-      <div class="flex justify-between items-center px-6 py-4 border-b dark:border-gold-800/30 border-gold-300/50">
-        <h3 class="font-serif text-xl gold-text">Notification Preferences</h3>
-        <button id="closeNotificationsModal"
-          class="dark:text-gold-300 text-gold-600 hover:text-gold-400 p-2 rounded-full hover:bg-gold-100/20 transition-colors">
-          <i class="fas fa-times"></i>
-        </button>
+<!-- Notifications Sign-up Modal -->
+<div id="notificationsModal"
+class="fixed inset-0 dark:bg-black/80 bg-black/50 backdrop-blur-sm flex items-center justify-center hidden z-50">
+<div
+  class="dark:bg-dark-800 bg-white rounded-lg border dark:border-gold-700/50 border-gold-300/50 max-w-xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-xl">
+  <div class="flex justify-between items-center px-6 py-4 border-b dark:border-gold-800/30 border-gold-300/50">
+    <h3 class="font-serif text-xl gold-text">Notification Preferences</h3>
+    <button id="closeNotificationsModal"
+      class="dark:text-gold-300 text-gold-600 hover:text-gold-400 p-2 rounded-full hover:bg-gold-100/20 transition-colors">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+  <div class="p-6">
+    <form id="notificationsForm" class="space-y-6">
+      <div>
+        <p class="text-sm dark:text-gold-200 text-gold-700 mb-4">
+          Stay updated with real-time alerts about suspicious PYUSD transactions. Choose your preferred notification
+          methods below.
+        </p>
       </div>
-      <div class="p-6">
-        <form id="notificationsForm" class="space-y-6">
-          <div>
-            <p class="text-sm dark:text-gold-200 text-gold-700 mb-4">
-              Stay updated with real-time alerts about suspicious PYUSD transactions. Choose your preferred notification
-              methods below.
+
+      <div class="space-y-4">
+        <h4 class="font-medium dark:text-gold-300 text-gold-700">Notification Methods</h4>
+
+        <div class="card notification-option">
+          <div class="flex items-center h-5">
+            <input id="email-checkbox" name="notification-method" type="checkbox" value="email"
+              class="form-checkbox">
+          </div>
+          <div class="flex-1">
+            <label for="email-checkbox" class="font-medium dark:text-gold-100 text-gray-800">Email
+              Notifications</label>
+            <p class="text-sm dark:text-gold-200/70 text-gray-600">Receive detailed alerts directly to your inbox
             </p>
           </div>
-
-          <div class="space-y-4">
-            <h4 class="font-medium dark:text-gold-300 text-gold-700">Notification Methods</h4>
-
-            <div class="card notification-option">
-              <div class="flex items-center h-5">
-                <input id="email-checkbox" name="notification-method" type="checkbox" value="email"
-                  class="form-checkbox">
-              </div>
-              <div class="flex-1">
-                <label for="email-checkbox" class="font-medium dark:text-gold-100 text-gray-800">Email
-                  Notifications</label>
-                <p class="text-sm dark:text-gold-200/70 text-gray-600">Receive detailed alerts directly to your inbox
-                </p>
-              </div>
-              <div class="text-xl dark:text-gold-400 text-gold-600">
-                <i class="fas fa-envelope"></i>
-              </div>
-            </div>
-
-            <div class="card notification-option">
-              <div class="flex items-center h-5">
-                <input id="discord-checkbox" name="notification-method" type="checkbox" value="discord"
-                  class="form-checkbox">
-              </div>
-              <div class="flex-1">
-                <label for="discord-checkbox" class="font-medium dark:text-gold-100 text-gray-800">Discord
-                  Notifications</label>
-                <p class="text-sm dark:text-gold-200/70 text-gray-600">Get instant alerts in your Discord server</p>
-              </div>
-              <div class="text-xl dark:text-gold-400 text-gold-600">
-                <i class="fab fa-discord"></i>
-              </div>
-            </div>
-
-            <div class="card notification-option">
-              <div class="flex items-center h-5">
-                <input id="telegram-checkbox" name="notification-method" type="checkbox" value="telegram"
-                  class="form-checkbox">
-              </div>
-              <div class="flex-1">
-                <label for="telegram-checkbox" class="font-medium dark:text-gold-100 text-gray-800">Telegram
-                  Notifications</label>
-                <p class="text-sm dark:text-gold-200/70 text-gray-600">Receive alerts on your Telegram account</p>
-              </div>
-              <div class="text-xl dark:text-gold-400 text-gold-600">
-                <i class="fab fa-telegram-plane"></i>
-              </div>
-            </div>
+          <div class="text-xl dark:text-gold-400 text-gold-600">
+            <i class="fas fa-envelope"></i>
           </div>
+        </div>
 
-          <div id="notification-details" class="space-y-4">
-            <!-- Email field (initially hidden) -->
-            <div id="email-field" class="hidden">
-              <label for="email" class="form-label">Email Address</label>
-              <input type="email" id="email" name="email" placeholder="your@email.com" class="form-input">
-            </div>
-
-            <!-- Discord field (initially hidden) -->
-            <div id="discord-field" class="hidden">
-              <label for="discord" class="form-label">Discord Username</label>
-              <input type="text" id="discord" name="discord" placeholder="username#0000" class="form-input">
-            </div>
-
-            <!-- Telegram field (initially hidden) -->
-            <div id="telegram-field" class="hidden">
-              <label for="telegram" class="form-label">Telegram Username</label>
-              <input type="text" id="telegram" name="telegram" placeholder="@username" class="form-input">
-            </div>
+        <div class="card notification-option">
+          <div class="flex items-center h-5">
+            <input id="discord-checkbox" name="notification-method" type="checkbox" value="discord"
+              class="form-checkbox">
           </div>
-
-          <div class="space-y-4">
-            <h4 class="font-medium dark:text-gold-300 text-gold-700">Alert Preferences</h4>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label for="alert-severity" class="form-label">Minimum Severity</label>
-                <select id="alert-severity" name="alert-severity" class="form-input">
-                  <option value="all">All Alerts</option>
-                  <option value="low">low</option>
-                  <option value="medium">medium</option>
-                  <option value="high">high</option>
-                </select>
-              </div>
-
-              <div>
-                <label for="alert-frequency" class="form-label">Notification Frequency</label>
-                <select id="alert-frequency" name="alert-frequency" class="form-input">
-                  <option value="immediate">Real-time</option>
-                  <option value="hourly">Hourly Digest</option>
-                  <option value="daily">Daily Summary</option>
-                </select>
-              </div>
-            </div>
+          <div class="flex-1">
+            <label for="discord-checkbox" class="font-medium dark:text-gold-100 text-gray-800">Discord
+              Notifications</label>
+            <p class="text-sm dark:text-gold-200/70 text-gray-600">Get instant alerts in your Discord server</p>
           </div>
-
-          <div class="pt-4 border-t dark:border-gold-800/30 border-gold-300/50">
-            <button type="submit" id="save-notifications" class="btn-gold w-full">
-              <i class="fas fa-bell mr-2"></i>
-              Save Notification Preferences
-            </button>
+          <div class="text-xl dark:text-gold-400 text-gold-600">
+            <i class="fab fa-discord"></i>
           </div>
-        </form>
+        </div>
+
+        <div class="card notification-option">
+          <div class="flex items-center h-5">
+            <input id="telegram-checkbox" name="notification-method" type="checkbox" value="telegram"
+              class="form-checkbox">
+          </div>
+          <div class="flex-1">
+            <label for="telegram-checkbox" class="font-medium dark:text-gold-100 text-gray-800">Telegram
+              Notifications</label>
+            <p class="text-sm dark:text-gold-200/70 text-gray-600">Receive alerts on your Telegram account</p>
+          </div>
+          <div class="text-xl dark:text-gold-400 text-gold-600">
+            <i class="fab fa-telegram-plane"></i>
+          </div>
+        </div>
       </div>
-    </div>
+
+      <div id="notification-details" class="space-y-4">
+        <!-- Email field (initially hidden) -->
+        <div id="email-field" class="hidden">
+          <label for="email" class="form-label">Email Address</label>
+          <input type="email" id="email" name="email" placeholder="your@email.com" class="form-input dark:bg-dark-700 bg-gold-50 dark:border-gold-600/30 border-gold-200 text-black dark:text-black placeholder-gray-500">
+        </div>
+
+        <!-- Discord field (initially hidden) -->
+        <div id="discord-field" class="hidden">
+          <label for="discord" class="form-label">Discord Username</label>
+          <input type="text" id="discord" name="discord" placeholder="username#0000" class="form-input dark:bg-dark-700 bg-gold-50 dark:border-gold-600/30 border-gold-200 text-black dark:text-black placeholder-gray-500">
+        </div>
+
+        <!-- Telegram field (initially hidden) -->
+        <div id="telegram-field" class="hidden">
+          <label for="telegram" class="form-label">Telegram Username</label>
+          <input type="text" id="telegram" name="telegram" placeholder="@username" class="form-input dark:bg-dark-700 bg-gold-50 dark:border-gold-600/30 border-gold-200 text-black dark:text-black placeholder-gray-500">
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <h4 class="font-medium dark:text-gold-300 text-gold-700">Alert Preferences</h4>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label for="alert-severity" class="form-label">Minimum Severity</label>
+            <select id="alert-severity" name="alert-severity" class="form-input dark:bg-dark-700 bg-gold-50 dark:border-gold-600/30 border-gold-200 text-black dark:text-black">
+              <option value="all">All Alerts</option>
+              <option value="low">low</option>
+              <option value="medium">medium</option>
+              <option value="high">high</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="alert-frequency" class="form-label">Notification Frequency</label>
+            <select id="alert-frequency" name="alert-frequency" class="form-input dark:bg-dark-700 bg-gold-50 dark:border-gold-600/30 border-gold-200 text-black dark:text-black">
+              <option value="immediate">Real-time</option>
+              <option value="hourly">Hourly Digest</option>
+              <option value="daily">Daily Summary</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-4 border-t dark:border-gold-800/30 border-gold-300/50">
+        <button type="submit" id="save-notifications" class="btn-gold w-full">
+          <i class="fas fa-bell mr-2"></i>
+          Save Notification Preferences
+        </button>
+      </div>
+    </form>
   </div>
+</div>
+</div>
 
   <!-- Loading Modal -->
   <div id="loading-modal"

@@ -1,0 +1,277 @@
+# PYUSD Guardian Documentation
+
+## Introduction
+
+PYUSD Guardian is a real-time transaction monitoring and compliance system for PYUSD stablecoin transactions. The system leverages Google Cloud Platform's Blockchain RPC service to provide deep visibility into PYUSD transactions, enabling comprehensive security monitoring at scale.
+
+## System Overview
+
+PYUSD Guardian analyzes every PYUSD transaction by utilizing computationally expensive trace methods (`debug_traceTransaction`, `trace_block`) that would typically be cost-prohibitive on other platforms. The system enables:
+
+- Full transaction trace analysis for every PYUSD interaction
+- Multi-hop token tracking through complex contract interactions
+- Real-time compliance alerts through multiple notification channels
+- Custom risk rules deployment for organization-specific compliance needs
+
+## Architecture
+
+```
+                            Google Cloud Platform (GCP)
++-------------------+      +-------------------------+      +------------------+
+| Ethereum Network  | ---> | GCP Blockchain RPC      | ---> | Trace Processor  |
+| (PYUSD Contract)  |      | (debug_traceTransaction)|      | (Express.js)     |
++-------------------+      +-------------------------+      +------------------+
+                                                                     |
+                                                                     v
++-------------------+      +-------------------------+      +------------------+
+| Alert System      | <--- | Compliance Engine       | <--- | MongoDB Storage  |
+| (Email/Telegram/  |      | (Pattern Recognition)   |      | (Transaction &   |
+|  Discord)         |      |                         |      |  Alert Data)     |
++-------------------+      +-------------------------+      +------------------+
+```
+
+## Installation and Setup
+
+### Prerequisites
+- Node.js 16+
+- MongoDB
+- GCP account with Blockchain RPC service enabled
+
+### Installation Steps
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/dejaguarkyng/pyusd-guardian.git
+   cd pyusd-guardian
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Configure environment variables:
+   ```bash
+   cp .env.example .env
+   ```
+
+4. Edit the `.env` file with your configuration:
+   ```
+   # GCP Settings
+   GCP_PROJECT_ID=your-project-id
+   GCP_NODE_URL=https://your-gcp-blockchain-node-url
+
+   # MongoDB
+   MONGODB_URI=mongodb://localhost:27017/pyusd-guardian
+
+   # Notification Settings (Optional)
+   DISCORD_WEBHOOK=https://discord.com/api/webhooks/...
+   TELEGRAM_BOT_TOKEN=your-telegram-bot-token
+   EMAIL_API_KEY=your-email-service-api-key
+
+   # PYUSD Contract
+   PYUSD_ADDRESS=0x1456688345527bE1f37E9e627DA0837D6f08C925
+   ```
+
+5. Start the service:
+   ```bash
+   npm start
+   ```
+
+## Configuration Options
+
+### GCP Configuration
+- `GCP_PROJECT_ID`: Your Google Cloud Platform project ID
+- `GCP_NODE_URL`: URL for your GCP Blockchain RPC node
+
+### Database Configuration
+- `MONGODB_URI`: Connection string for MongoDB
+
+### Notification Settings
+- `DISCORD_WEBHOOK`: Webhook URL for Discord notifications
+- `TELEGRAM_BOT_TOKEN`: Bot token for Telegram notifications
+- `EMAIL_API_KEY`: API key for email service
+
+### Contract Settings
+- `PYUSD_ADDRESS`: Ethereum address of the PYUSD contract
+
+## API Reference
+
+### Alerts API
+
+#### Get Alerts
+Retrieves alerts based on filtering criteria.
+
+```
+GET /api/alerts
+```
+
+Parameters:
+- `severity` (string): Filter by alert severity (low, medium, high)
+- `page` (number): Page number for pagination
+- `limit` (number): Number of results per page
+
+Example:
+```bash
+curl -X GET "http://localhost:3000/api/alerts?severity=high&page=1&limit=10"
+```
+
+#### Register for Notifications
+
+```
+POST /api/notification-preferences
+```
+
+Request body:
+```json
+{
+  "email": "user@example.com",
+  "discord": "https://discord.com/api/webhooks/...",
+  "telegram": "@username",
+  "severity": "medium",
+  "frequency": "immediate"
+}
+```
+
+Example:
+```bash
+curl -X POST "http://localhost:3000/api/notification-preferences" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "discord": "https://discord.com/api/webhooks/...",
+    "telegram": "@username",
+    "severity": "medium",
+    "frequency": "immediate"
+  }'
+```
+
+#### Get System Statistics
+
+```
+GET /api/stats
+```
+
+Example:
+```bash
+curl -X GET "http://localhost:3000/api/stats"
+```
+
+## Compliance Engine
+
+The compliance engine is the core of PYUSD Guardian, responsible for analyzing transaction traces and identifying suspicious patterns.
+
+### Sample Analysis Logic
+
+```javascript
+function analyzeTrace(trace) {
+  // Initialize risk report
+  const riskReport = { flagged: false, issues: [], severity: 'low' };
+  
+  // Check for proxy patterns
+  const proxyHops = countProxyHops(trace.calls);
+  if (proxyHops > 3) {
+    riskReport.flagged = true;
+    riskReport.issues.push('EXCESSIVE_PROXY_HOPS');
+    riskReport.severity = 'medium';
+  }
+  
+  // Check for known high-risk patterns
+  if (detectCircularTransfers(trace.calls)) {
+    riskReport.flagged = true;
+    riskReport.issues.push('CIRCULAR_TRANSFER_PATTERN');
+    riskReport.severity = 'high';
+  }
+  
+  return riskReport;
+}
+```
+
+## Cost Efficiency
+
+PYUSD Guardian leverages GCP's Blockchain RPC service to make comprehensive monitoring economically feasible:
+
+| Provider | `debug_traceTransaction` Cost | Monthly Cost (10K tx/day) |
+|----------|-------------------------------|---------------------------|
+| Standard RPC | $0.10-0.50 per trace | $30,000-150,000 |
+| GCP Blockchain RPC | Free with service | $0 (included) |
+
+This cost advantage enables:
+- 100% transaction coverage instead of sampling
+- Deep analysis of every transaction's execution context
+- Proactive monitoring instead of reactive investigation
+
+## Development
+
+### Running Tests
+```bash
+npm test
+```
+
+### Development Mode
+```bash
+npm run dev
+```
+
+### Code Linting
+```bash
+npm run lint
+```
+
+## Security Best Practices
+
+When deploying PYUSD Guardian, consider the following security measures:
+
+1. API endpoint security:
+   - Implement proper authentication and authorization
+   - Use HTTPS for all endpoints
+   - Rate limit API requests
+
+2. Credential management:
+   - Store sensitive keys in GCP Secret Manager
+   - Rotate API keys regularly
+   - Use service accounts with minimal permissions
+
+3. Access control:
+   - Implement IP whitelisting for administrative functions
+   - Enable 2FA for all project contributors
+   - Follow the principle of least privilege
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Connection to GCP Blockchain RPC fails**
+   - Verify your GCP credentials and project configuration
+   - Check network connectivity and firewall settings
+   - Ensure the service is enabled in your GCP project
+
+2. **MongoDB connection issues**
+   - Verify your MongoDB URI is correct
+   - Check if MongoDB service is running
+   - Ensure network allows connections to MongoDB
+
+3. **Notification delivery failures**
+   - Verify webhook URLs and API keys for notification services
+   - Check rate limits on notification services
+   - Test notification endpoints independently
+
+## Contributing
+
+Contributions to PYUSD Guardian are welcome. Please follow these steps:
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License.
+
+## Contact and Support
+
+Project Link: [https://github.com/dejaguarkyng/pyusd-guardian](https://github.com/dejaguarkyng/pyusd-guardian)
+
+For support inquiries, please open an issue on the GitHub repository.

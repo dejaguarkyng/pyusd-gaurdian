@@ -47,7 +47,7 @@ Traditional RPC providers charge significant fees for trace-related methods, mak
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/pyusd-guardian.git
+git clone https://github.com/dejaguarkyng/pyusd-guardian.git
 cd pyusd-guardian
 
 # Install dependencies
@@ -194,7 +194,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Contact
 
-Project Link: [https://github.com/yourusername/pyusd-guardian](https://github.com/yourusername/pyusd-guardian)
+Project Link: [https://github.com/dejaguarkyng/pyusd-guardian](https://github.com/dejaguarkyng/pyusd-guardian)
 
 ---
 
