@@ -42,7 +42,6 @@ const AlertSchema = new mongoose.Schema({
     required: true
   }
 });
-
 // Define Transaction Schema
 const TransactionSchema = new mongoose.Schema({
   txHash: {
@@ -76,6 +75,10 @@ const TransactionSchema = new mongoose.Schema({
   },
   value: {
     type: String
+  },
+  flagged: {
+    type: Boolean,
+    default: false // Flagged field to mark transactions as flagged
   },
   // Add any other transaction fields you want to store
 });
@@ -209,7 +212,6 @@ export async function getAlerts(page = 1, limit = 20, filter = {}) {
     }
   };
 }
-
 
 export async function getMonitoringStartTime() {
   const firstTx = await Transaction.find()
@@ -374,16 +376,34 @@ export async function getNotificationPreferences({ email, discord, telegram }) {
   }
 }
 
+
+
+// Get paginated flagged transactions
 export async function getFlaggedTransactions(page = 1, limit = 20) {
   const skip = (page - 1) * limit;
 
-  // Assuming you mark flagged transactions with a `flagged: true` or similar field
-  return await Transaction.find({ flagged: true })
-    .sort({ timestamp: -1 })
-    .skip(skip)
-    .limit(limit)
-    .lean();
+  const [transactions, total] = await Promise.all([
+    Transaction.find({ flagged: true }) // Only fetch flagged transactions
+      .sort({ timestamp: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    Transaction.countDocuments({ flagged: true }) // Count only flagged transactions
+  ]);
+
+  return {
+    transactions,
+    pagination: {
+      total,
+      page,
+      limit,
+      pages: Math.ceil(total / limit)
+    }
+  };
 }
+
+
+
 
 
 
