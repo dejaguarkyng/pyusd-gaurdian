@@ -23,6 +23,7 @@ const limit = pLimit(MAX_CONCURRENT_TRACES);
 // Track latest scanned block
 let latestBlock = STARTING_BLOCK;
 
+
 // Process a single transaction
 async function processTransaction(tx, blockNumber, io) {
   try {
@@ -37,6 +38,7 @@ async function processTransaction(tx, blockNumber, io) {
     const to = tx.to ? String(tx.to).toLowerCase() : null;
     const from = tx.from ? String(tx.from).toLowerCase() : null;
     const input = tx.data || tx.input || '';
+    const value = tx.value ? tx.value.toString() : '0';
     
     // Skip if transaction doesn't have required fields
     if (!from) {
@@ -44,58 +46,74 @@ async function processTransaction(tx, blockNumber, io) {
       return;
     }
     
-    // Check if transaction involves PYUSD
+    // Save every PYUSD transaction (limited to 1000)
     const involvesPYUSD = (
       to === PYUSD_ADDRESS ||
       from === PYUSD_ADDRESS ||
       (typeof input === 'string' && input.includes(PYUSD_ADDRESS.slice(2)))
     );
     
-    if (!involvesPYUSD) return;
-    
-    logger.info(`PYUSD-related TX found`, { txHash, blockNumber });
-    
-    const trace = await withRetry(() => getTransactionTrace(txHash));
-    if (!trace) {
-      logger.warn(`No trace available for transaction`, { txHash });
-      return;
-    }
-    
-    const report = analyzeTrace(trace);
-    const complianceFlags = evaluateCompliance(trace, tx);
-    
-    if (report.flagged || complianceFlags.length > 0) {
-      logger.warn(`Transaction flagged for compliance issues`, { 
-        txHash, 
-        flags: complianceFlags.map(f => f.rule) 
-      });
+    if (involvesPYUSD) {
+      logger.info(`PYUSD-related TX found`, { txHash, blockNumber });
       
-      for (const issue of complianceFlags) {
-        const alert = {
+
+      try {
+        await saveTransaction({
           txHash,
           blockNumber,
-          timestamp: new Date().toISOString(),
-          rule: issue.rule,
-          details: issue.details,
-          riskReport: report,
-        };
+          timestamp: new Date(),
+          from,
+          to,
+          input,
+          value
+        });
 
-        // Save to database
-        try {
-          await saveAlert(alert);
-        } catch (err) {
-          logger.error('Failed to save alert to database', { error: err.message, txHash });
+        logger.error('Save transaction to database', { error: err.message, txHash });
+      } catch (err) {
+        logger.error('Failed to save transaction to database', { error: err.message, txHash });
+      }
+      
+      const trace = await withRetry(() => getTransactionTrace(txHash));
+      if (!trace) {
+        logger.warn(`No trace available for transaction`, { txHash });
+        return;
+      }
+      
+      const report = analyzeTrace(trace);
+      const complianceFlags = evaluateCompliance(trace, tx);
+      
+      if (report.flagged || complianceFlags.length > 0) {
+        logger.warn(`Transaction flagged for compliance issues`, { 
+          txHash, 
+          flags: complianceFlags.map(f => f.rule) 
+        });
+        
+        for (const issue of complianceFlags) {
+          const alert = {
+            txHash,
+            blockNumber,
+            timestamp: new Date().toISOString(),
+            rule: issue.rule,
+            details: issue.details,
+            riskReport: report,
+          };
+
+          try {
+            await saveAlert(alert);
+          } catch (err) {
+            logger.error('Failed to save alert to database', { error: err.message, txHash });
+          }
+
+          // Notify WebSocket clients
+          notifyClients(io, alert);
+
+          // Execute external alerts in parallel but handle failures individually
+          await Promise.allSettled([
+            pushToSheet(alert).catch(err => logger.error('Failed to push to sheet', { error: err.message, txHash })),
+            sendDiscordAlert(alert).catch(err => logger.error('Failed to send Discord alert', { error: err.message, txHash })),
+            sendEmailAlert(alert).catch(err => logger.error('Failed to send email alert', { error: err.message, txHash })),
+          ]);
         }
-
-        // Notify WebSocket clients
-        notifyClients(io, alert);
-
-        // Execute external alerts in parallel but handle failures individually
-        await Promise.allSettled([
-          pushToSheet(alert).catch(err => logger.error('Failed to push to sheet', { error: err.message, txHash })),
-          sendDiscordAlert(alert).catch(err => logger.error('Failed to send Discord alert', { error: err.message, txHash })),
-          sendEmailAlert(alert).catch(err => logger.error('Failed to send email alert', { error: err.message, txHash })),
-        ]);
       }
     }
   } catch (error) {
