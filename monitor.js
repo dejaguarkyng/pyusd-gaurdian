@@ -26,13 +26,19 @@ let latestBlock = STARTING_BLOCK;
 
 // Process a single transaction
 async function processTransaction(tx, blockNumber, io) {
+  if (!tx || typeof tx !== 'object') {
+    logger.warn(`Null or malformed transaction received`, { blockNumber });
+    return;
+  }
+  
+  console.log('fuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuck');
   try {
     // Add defensive checks for all properties
     if (!tx) {
       logger.warn(`Null or undefined transaction received`, { blockNumber });
       return;
     }
-
+    console.log(tx);
     // Safely access transaction properties with fallbacks
     const txHash = tx.hash || '0x0';
     const to = tx.to ? String(tx.to).toLowerCase() : null;
@@ -185,6 +191,9 @@ async function processBlockSafely(provider, blockNumber, io) {
 
 
 // Main monitoring function
+
+
+
 async function monitorBlocks(provider, io) {
   // Initialize starting block if needed
   if (!latestBlock) {
@@ -204,16 +213,23 @@ async function monitorBlocks(provider, io) {
     if (currentBlock > latestBlock) {
       logger.info(`Processing new blocks`, { from: latestBlock + 1, to: currentBlock });
 
-      // Process blocks in batches to avoid memory issues
       for (let start = latestBlock + 1; start <= currentBlock; start += MAX_BLOCKS_PER_BATCH) {
         const end = Math.min(start + MAX_BLOCKS_PER_BATCH - 1, currentBlock);
-
-        // Process each block individually with proper error handling
         let successfulBlocks = 0;
+
         for (let blockNumber = start; blockNumber <= end; blockNumber++) {
           try {
-            const success = await processBlockSafely(provider, blockNumber, io);
-            if (success) successfulBlocks++;
+            const result = await processBlockSafely(provider, blockNumber, io);
+            if (result.success) {
+              successfulBlocks++;
+              if (result.failedTxs > 0) {
+                logger.warn(`Block processed with partial transaction failures`, {
+                  blockNumber,
+                  failedTxs: result.failedTxs,
+                  totalTxs: result.totalTxs
+                });
+              }
+            }
           } catch (blockError) {
             logger.error(`Failed to process block`, {
               blockNumber,
@@ -228,31 +244,21 @@ async function monitorBlocks(provider, io) {
             successful: successfulBlocks
           });
         }
-        const blockResult = await processBlockSafely(provider, blockNumber, io);
-        if (blockResult.success) {
-          successfulBlocks++;
-          // You can also log additional metrics if needed
-          if (blockResult.failedTxs > 0) {
-            logger.warn(`Block processed with partial transaction failures`, {
-              blockNumber,
-              failedTxs: blockResult.failedTxs,
-              totalTxs: blockResult.totalTxs
-            });
-          }
-        }
-        // Update latest block even if some blocks failed
+
+        // ✅ This now updates properly after the batch is done
         latestBlock = end;
       }
     }
   } catch (error) {
     logger.error(`Error during block monitoring`, { error: error.message });
   } finally {
-    // Schedule next check with fixed interval
     setTimeout(() => monitorBlocks(provider, io), POLL_INTERVAL_MS);
   }
 }
 
-// Start monitoring blocks
+
+
+// // Start monitoring blocks
 export function startMonitoring(provider, io) {
   monitorBlocks(provider, io);
 }

@@ -37,49 +37,111 @@ export function notifyClients(io, alert) {
   logger.info('Sent alert to connected clients', { txHash: alert.txHash });
 }
 
-// Safely get block transactions for cases where getBlock with transactions might fail
+
+
+
+// Get all transactions from a block using various fallback strategies
 export async function getBlockTransactions(provider, blockNumber) {
   try {
-    // First try to get the block with transactions
+    // First attempt: get full block with transactions
     const block = await provider.getBlock(blockNumber, true);
     if (!block) {
       throw new Error(`No block returned for block number ${blockNumber}`);
     }
+    console.log('Full block.transactions:', block.transactions);
     return block.transactions || [];
+
   } catch (error) {
-    logger.warn(`Failed to get block with transactions directly, trying alternative approach`, { 
+    logger.warn(`Failed to get block with transactions directly, trying fallback by tx hashes`, { 
       blockNumber, 
       error: error.message 
     });
-    
-    // Fallback method: get transaction hashes, then fetch each transaction
+
     try {
+      // Fallback: get block, then fetch each transaction hash in batches
       const block = await provider.getBlock(blockNumber);
-      if (!block || !block.transactions || !Array.isArray(block.transactions)) {
-        throw new Error('Invalid block data received');
+      if (!block || !Array.isArray(block.transactions)) {
+        throw new Error('Invalid block structure');
       }
-      
-      // Fetch each transaction by hash with proper error handling
+
+      const txHashes = block.transactions;
+      const batchSize = 50;
       const transactions = [];
-      for (const txHash of block.transactions) {
-        try {
-          const tx = await withRetry(() => provider.getTransaction(txHash));
-          if (tx) {
-            transactions.push(tx);
+
+      for (let i = 0; i < txHashes.length; i += batchSize) {
+        const batch = txHashes.slice(i, i + batchSize);
+
+        const results = await Promise.allSettled(
+          batch.map(txHash => withRetry(() => provider.getTransaction(txHash)))
+        );
+
+        results.forEach((result, idx) => {
+          const txHash = batch[idx];
+          if (result.status === 'fulfilled' && result.value) {
+            transactions.push(result.value);
+          } else {
+            logger.error(`Failed to fetch transaction in batch`, {
+              txHash,
+              error: result.reason?.message || result.reason
+            });
           }
-        } catch (txError) {
-          logger.error(`Failed to fetch transaction`, { txHash, error: txError.message });
-          // Continue with other transactions
-        }
+        });
       }
-      
-      return transactions;
+
+      console.log('Fetched transactions from hashes (batch fallback):', transactions);
+      if (transactions.length > 0) return transactions;
+
+      // If we got nothing, try final fallback
+      throw new Error('No transactions fetched from block hashes');
+
     } catch (fallbackError) {
-      logger.error(`Fallback method to get transactions also failed`, { 
+      logger.warn(`Fallback by tx hashes failed, trying debug_traceBlockByNumber`, { 
         blockNumber, 
         error: fallbackError.message 
       });
-      throw fallbackError;
+
+      try {
+        // Final fallback: trace block to extract transactions
+        const traceResults = await withRetry(() => 
+          provider.send('debug_traceBlockByNumber', [toHex(blockNumber), {}])
+        );
+
+        if (traceResults) {
+          traceResults.forEach((trace, idx) => {
+            if (!trace || !trace.action || !trace.action.from) {
+              logger.warn('Skipping malformed trace entry', {
+                blockNumber,
+                index: idx,
+                rawTrace: trace
+              });
+            }
+          });
+        }
+        
+        const transactions = (traceResults || [])
+          .filter(trace => trace && trace.action && trace.action.from)
+          .map((trace, index) => ({
+            hash: trace.transactionHash || `unknown-${blockNumber}-${index}`,
+            from: trace.action?.from || null,
+            to: trace.action?.to || null,
+            input: trace.action?.input || '',
+            value: trace.action?.value || '0x0',
+          }));
+      
+        console.log('Final fallback - traced transactions:', transactions);
+        return transactions;
+      } catch (traceError) {
+        logger.error(`debug_traceBlockByNumber failed as last resort`, { 
+          blockNumber, 
+          error: traceError.message 
+        });
+        throw traceError;
+      }
     }
   }
+}
+
+// Utility to convert number to hex
+function toHex(num) {
+  return '0x' + Number(num).toString(16);
 }
