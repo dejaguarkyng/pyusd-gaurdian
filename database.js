@@ -195,6 +195,27 @@ export async function getAlerts(page = 1, limit = 20) {
   };
 }
 
+
+export async function getMonitoringStartTime() {
+  const firstTx = await Transaction.find()
+    .sort({ timestamp: 1 })
+    .limit(1)
+    .lean();
+
+  return firstTx.length > 0 ? firstTx[0].timestamp : null;
+}
+
+// Get total number of transactions
+export async function getTotalTransactionCount() {
+  return Transaction.countDocuments();
+}
+
+// Get total number of flagged alerts
+export async function getTotalAlertCount() {
+  return Alert.countDocuments();
+}
+
+
 // Get alert by transaction hash
 export async function getAlertByTxHash(txHash) {
   return Alert.findOne({ txHash }).lean();

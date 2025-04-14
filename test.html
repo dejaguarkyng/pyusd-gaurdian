@@ -678,6 +678,7 @@
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.error || `API error: ${response.status}`);
     }
+
     return await response.json();
   } catch (error) {
     showError(`Failed to fetch data: ${error.message}`);
@@ -971,16 +972,11 @@ function initializeUI() {
     async function updateStats() {
   try {
     const stats = await fetchAPI('/stats');
-    
-    currentBlockEl.textContent = stats.currentBlock.toLocaleString();
-    pyusdTxCountEl.textContent = stats.transactionCount;
-    flaggedTxCountEl.textContent = stats.flaggedTransactionCount;
-    
-    if (stats.startTime) {
-      monitoringSinceEl.textContent = formatDate(new Date(stats.startTime)).split(',')[0];
-    } else {
-      monitoringSinceEl.textContent = '-';
-    }
+    console.log('Fetched stats:', stats);
+    currentBlockEl.textContent = stats.currentBlock;
+    pyusdTxCountEl.textContent = stats.totalTransactions;
+    flaggedTxCountEl.textContent = stats.totalFlagged;
+    monitoringSinceEl.textContent = formatDate(new Date(stats.monitoringSince));
   } catch (error) {
     console.error('Error updating stats:', error);
     // Don't show an error toast for stats updates to avoid UI clutter
@@ -996,7 +992,7 @@ function initializeUI() {
     const filterValue = txFilter.value;
     
     // Fetch transactions directly from API with filter
-    const response = await fetchAPI(`/transactions?filter=${filterValue}`);
+    const response = await fetchAPI(`/transactions`);
     const transactions = response.data || [];
     
     if (transactions.length === 0) {

@@ -1,13 +1,16 @@
 // API Routes
-import { 
-  getAlerts, 
-  getAlertByTxHash, 
-  saveAlert, 
+import {
+  getAlerts,
+  getAlertByTxHash,
+  saveAlert,
   getUsersForNotification,
   saveNotificationPreferences,
   getNotificationPreferences,
   deleteNotificationPreferences,
-  getTransactions, getTransactionByHash
+  getTransactions, getTransactionByHash,
+  getTotalTransactionCount,
+  getTotalAlertCount,
+  getMonitoringStartTime
 } from './database.js';
 import { logger } from './server.js';
 import { notifyClients } from './utils.js';
@@ -25,27 +28,27 @@ export async function processAlertNotifications(alert) {
   try {
     // Determine alert severity from risk report
     const severity = alert.riskReport?.severity || 'medium';
-    
+
     // Get users who should be notified based on severity level
     const users = await getUsersForNotification(severity);
-    
+
     if (!users || users.length === 0) {
       logger.info('No users subscribed for this alert severity', { severity });
       return { success: true, notifiedCount: 0 };
     }
-    
+
     // Group users by notification frequency
     const immediateUsers = users.filter(user => user.frequency === 'immediate');
     const hourlyUsers = users.filter(user => user.frequency === 'hourly');
     const dailyUsers = users.filter(user => user.frequency === 'daily');
-    
+
     // Send immediate notifications
     const results = await sendImmediateNotifications(immediateUsers, alert);
-    
+
     // Queue other notifications based on frequency
     queueDelayedNotifications(hourlyUsers, alert, 'hourly');
     queueDelayedNotifications(dailyUsers, alert, 'daily');
-    
+
     return {
       success: true,
       immediateNotifications: results,
@@ -55,18 +58,13 @@ export async function processAlertNotifications(alert) {
       }
     };
   } catch (error) {
-    logger.error('Error processing alert notifications', { 
+    logger.error('Error processing alert notifications', {
       error: error.message,
       alertId: alert.txHash
     });
     throw error;
   }
 }
-
-
-
-
-
 
 
 /**
@@ -82,9 +80,9 @@ async function sendImmediateNotifications(users, alert) {
     discord: { sent: 0, failed: 0 },
     telegram: { sent: 0, failed: 0 }
   };
-  
+
   const notificationPromises = [];
-  
+
   for (const user of users) {
     // Send email notifications
     if (user.email) {
@@ -93,14 +91,14 @@ async function sendImmediateNotifications(users, alert) {
           .then(() => results.email.sent++)
           .catch(err => {
             results.email.failed++;
-            logger.error('Email notification failed', { 
+            logger.error('Email notification failed', {
               error: err.message,
               userId: user.userId
             });
           })
       );
     }
-    
+
     // Send Discord notifications
     if (user.discord) {
       notificationPromises.push(
@@ -108,14 +106,14 @@ async function sendImmediateNotifications(users, alert) {
           .then(() => results.discord.sent++)
           .catch(err => {
             results.discord.failed++;
-            logger.error('Discord notification failed', { 
+            logger.error('Discord notification failed', {
               error: err.message,
               userId: user.userId
             });
           })
       );
     }
-    
+
     // Send Telegram notifications
     if (user.telegram) {
       notificationPromises.push(
@@ -123,7 +121,7 @@ async function sendImmediateNotifications(users, alert) {
           .then(() => results.telegram.sent++)
           .catch(err => {
             results.telegram.failed++;
-            logger.error('Telegram notification failed', { 
+            logger.error('Telegram notification failed', {
               error: err.message,
               userId: user.userId
             });
@@ -131,7 +129,7 @@ async function sendImmediateNotifications(users, alert) {
       );
     }
   }
-  
+
   await Promise.allSettled(notificationPromises);
   return results;
 }
@@ -144,17 +142,17 @@ async function sendImmediateNotifications(users, alert) {
  */
 function queueDelayedNotifications(users, alert, frequency) {
   if (users.length === 0) return;
-  
+
   // In a production environment, you would use a proper job queue system
   // like Bull, Agenda, or a cloud-based queue service.
   // For now, we'll simply log that these would be queued
-  
+
   logger.info(`Queued ${frequency} notifications for ${users.length} users`, {
     alertId: alert.txHash,
     frequency,
     userCount: users.length
   });
-  
+
   // Here you would add the notifications to your job queue
   // Example with a hypothetical queue:
   /*
@@ -174,7 +172,7 @@ function queueDelayedNotifications(users, alert, frequency) {
  */
 function getNextScheduleTime(frequency) {
   const now = new Date();
-  
+
   if (frequency === 'hourly') {
     // Next hour, at the start of the hour
     now.setHours(now.getHours() + 1);
@@ -189,7 +187,7 @@ function getNextScheduleTime(frequency) {
     now.setSeconds(0);
     now.setMilliseconds(0);
   }
-  
+
   return now;
 }
 
@@ -232,11 +230,11 @@ export function setupRoutes(app, provider) {
     try {
       const { txHash } = req.params;
       const alert = await getAlertByTxHash(txHash);
-      
+
       if (!alert) {
         return res.status(404).json({ error: 'Alert not found' });
       }
-      
+
       res.json(alert);
     } catch (error) {
       logger.error('Error fetching alert details', { error: error.message, txHash: req.params.txHash });
@@ -274,7 +272,7 @@ export function setupRoutes(app, provider) {
       // Get basic provider information without exposing sensitive details
       const network = await provider.getNetwork();
       const blockNumber = await provider.getBlockNumber();
-      
+
       res.json({
         network: {
           name: network.name,
@@ -294,12 +292,12 @@ export function setupRoutes(app, provider) {
     try {
       const blockNumber = parseInt(req.params.blockNumber);
       const index = parseInt(req.params.index);
-      
+
       const block = await provider.getBlock(blockNumber, true);
       if (!block || !block.transactions || index >= block.transactions.length) {
         return res.status(404).json({ error: 'Block or transaction not found' });
       }
-      
+
       const tx = block.transactions[index];
       // Return a safe representation without sensitive data
       res.json({
@@ -320,18 +318,18 @@ export function setupRoutes(app, provider) {
   app.post('/api/notification-preferences', async (req, res) => {
     try {
       const { email, discord, telegram, severity, frequency } = req.body;
-      
+
       // Validate the request
       if (!email && !discord && !telegram) {
-        return res.status(400).json({ 
-          error: 'Please select at least one notification method' 
+        return res.status(400).json({
+          error: 'Please select at least one notification method'
         });
       }
-      
+
       // Get the user ID (this would typically come from authentication)
       // For now, we'll use a default user ID for demonstration
       const userId = req.user?.id || 'default-user';
-      
+
       // Create preferences object
       const preferencesData = {
         email: email || null,
@@ -340,11 +338,11 @@ export function setupRoutes(app, provider) {
         severity: severity || 'medium',
         frequency: frequency || 'immediate'
       };
-      
+
       // Save to database
       const savedPreferences = await saveNotificationPreferences(userId, preferencesData);
-      
-      logger.info('Notification preferences saved', { 
+
+      logger.info('Notification preferences saved', {
         userId,
         email: email ? true : false,
         discord: discord ? true : false,
@@ -352,10 +350,10 @@ export function setupRoutes(app, provider) {
         severity,
         frequency
       });
-      
+
       // Return success response
-      res.json({ 
-        success: true, 
+      res.json({
+        success: true,
         message: 'Notification preferences saved successfully',
         preferences: savedPreferences
       });
@@ -364,17 +362,17 @@ export function setupRoutes(app, provider) {
       res.status(500).json({ error: error.message || 'Failed to save notification preferences' });
     }
   });
-  
+
   // Get user notification preferences
   app.get('/api/notification-preferences', async (req, res) => {
     try {
       // Get the user ID (this would typically come from authentication)
       // For now, we'll use a default user ID for demonstration
       const userId = req.user?.id || 'default-user';
-      
+
       // Fetch from database
       const preferences = await getNotificationPreferences(userId);
-      
+
       if (!preferences) {
         // Return default preferences if none are found
         return res.json({
@@ -385,23 +383,86 @@ export function setupRoutes(app, provider) {
           frequency: 'immediate'
         });
       }
-      
+
       res.json(preferences);
     } catch (error) {
       logger.error('Error fetching notification preferences', { error: error.message });
       res.status(500).json({ error: error.message || 'Failed to fetch notification preferences' });
     }
   });
+  app.get('/api/stats', async (req, res) => {
+    try {
+      const currentBlock = await provider.getBlockNumber();
+      const totalTransactions = await getTotalTransactionCount();
+      const totalFlagged = await getTotalAlertCount();
+      const monitoringSince = await getMonitoringStartTime();
   
+      res.json({
+        currentBlock,
+        totalTransactions,
+        totalFlagged,
+        monitoringSince
+      });
+    } catch (error) {
+      logger.error('Error in /api/stats', { error: error.message });
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+
+  // Health check endpoint
+  app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok' });
+  });
+
+
+  app.get('/api/transactions', async (req, res) => {
+    const { page = 1, limit = 20 } = req.query;
+    const parsedPage = parseInt(page);
+    const parsedLimit = parseInt(limit);
+
+    logger.info('Incoming request to /api/transactions', { page: parsedPage, limit: parsedLimit });
+
+    try {
+      const transactions = await getTransactions(parsedPage, parsedLimit);
+      logger.info('Successfully fetched transactions', { count: transactions.length });
+      res.json(transactions);
+    } catch (error) {
+      logger.error('Error fetching transactions', { error: error.message, stack: error.stack });
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+
+
+  app.get('/api/transactions/:txHash', async (req, res) => {
+    try {
+      const { txHash } = req.params;
+      const tx = await getTransactionByHash(txHash);
+
+      if (!tx) {
+        return res.status(404).json({ error: 'Transaction not found' });
+      }
+
+      res.json(tx);
+    } catch (error) {
+      logger.error('Error fetching transaction', { error: error.message });
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+
+
+
   // Delete user notification preferences
   app.delete('/api/notification-preferences', async (req, res) => {
     try {
       // Get the user ID (this would typically come from authentication)
       const userId = req.user?.id || 'default-user';
-      
+
       // Delete from database
       const deleted = await deleteNotificationPreferences(userId);
-      
+
       if (deleted) {
         logger.info('Notification preferences deleted', { userId });
         res.json({ success: true, message: 'Notification preferences deleted successfully' });
@@ -413,42 +474,42 @@ export function setupRoutes(app, provider) {
       res.status(500).json({ error: error.message || 'Failed to delete notification preferences' });
     }
   });
-  
+
   // Test notification delivery (useful for development)
   app.post('/api/test-notification', async (req, res) => {
     try {
       const { severity } = req.body;
-      
+
       if (!severity || !['low', 'medium', 'high', 'critical'].includes(severity)) {
         return res.status(400).json({ error: 'Valid severity level is required (low, medium, high, critical)' });
       }
-      
+
       const testAlert = {
         txHash: `0xtest${Date.now()}`,
         blockNumber: 12345678,
         timestamp: new Date().toISOString(),
         rule: 'test-notification',
         details: `Test ${severity} alert notification`,
-        riskReport: { 
-          flagged: true, 
+        riskReport: {
+          flagged: true,
           severity: severity,
-          issues: ['test-notification'] 
+          issues: ['test-notification']
         }
       };
-      
+
       // Get users who should receive this notification based on severity
       const users = await getUsersForNotification(severity);
-      
+
       // Log the test notification
-      logger.info('Test notification triggered', { 
-        severity, 
-        recipientCount: users.length 
+      logger.info('Test notification triggered', {
+        severity,
+        recipientCount: users.length
       });
-      
+
       // In a real implementation, you would send the notifications here
       // For now, just return the users who would be notified
-      res.json({ 
-        success: true, 
+      res.json({
+        success: true,
         message: `Test ${severity} notification would be sent to ${users.length} users`,
         testAlert,
         recipientCount: users.length
