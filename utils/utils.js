@@ -1,6 +1,6 @@
 // Utility functions
 import { ethers } from 'ethers';
-import { RPC_URL, MAX_RETRIES, RETRY_DELAY_MS } from './config.js';
+import { RPC_URL, MAX_RETRIES, RETRY_DELAY_MS } from '../config/config.js';
 import { logger } from './server.js';
 
 // Initialize provider with fallback and timeout

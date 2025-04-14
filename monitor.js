@@ -1,13 +1,13 @@
 // Transaction monitoring functionality
 import pLimit from 'p-limit';
 import { getTransactionTrace } from './traceAnalyzer.js';
-import { analyzeTrace } from './traceParser.js';
-import { evaluateCompliance } from './complianceEngine.js';
-import { pushToSheet } from './sheetsExporter.js';
-import { sendDiscordAlert } from './discordNotifier.js';
+import { analyzeTrace } from './engines/traceParser.js';
+import { evaluateCompliance } from './engines/complianceEngine.js';
+import { pushToSheet } from './utils/sheetsExporter.js';
+import { sendDiscordAlert } from './utils/discordNotifier.js';
 import { sendEmailAlert } from './emailNotifier.js';
-import { saveAlert } from './database.js';
-import { saveTransaction } from './database.js';
+import { saveAlert } from './database/database.js';
+import { saveTransaction } from './database/database.js';
 import { logger } from './server.js';
 import {
   PYUSD_ADDRESS,
@@ -15,7 +15,7 @@ import {
   POLL_INTERVAL_MS,
   MAX_BLOCKS_PER_BATCH,
   STARTING_BLOCK
-} from './config.js';
+} from './config/config.js';
 import { withRetry, getBlockTransactions, notifyClients } from './utils.js';
 
 // Concurrency limiter

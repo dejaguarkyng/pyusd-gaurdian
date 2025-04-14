@@ -1,5 +1,5 @@
 // WebSocket setup and event handling
-import { logger } from './server.js';
+import { logger } from '../server.js';
 
 export function setupWebsocket(io) {
   io.on('connection', (socket) => {

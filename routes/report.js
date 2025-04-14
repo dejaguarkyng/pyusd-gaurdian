@@ -1,5 +1,5 @@
-import { getAlerts } from './database.js';
-import { sendEmail } from './emailNotifier.js'; // your own email util
+import { getAlerts } from '../database/database.js';
+import { sendEmail } from '../emailNotifier.js'; // your own email util
 import dayjs from 'dayjs';
 
 export async function generateDailyReport() {

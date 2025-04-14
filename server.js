@@ -5,11 +5,11 @@ import http from 'http';
 import cors from 'cors';
 import { Server } from 'socket.io';
 import winston from 'winston';
-import { setupRoutes } from './routes.js';
-import { setupWebsocket } from './websocket.js';
-import { initializeProvider } from './utils.js';
+import { setupRoutes } from './routes/routes.js';
+import { setupWebsocket } from './utils/websocket.js';
+import { initializeProvider } from './utils/utils.js';
 import { startMonitoring } from './monitor.js';
-import { PORT, FRONTEND_URL } from './config.js';
+import { PORT, FRONTEND_URL } from './config/config.js';
 
 // Load environment variables
 config();

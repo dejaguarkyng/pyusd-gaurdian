@@ -13,13 +13,13 @@ import {
   getTotalAlertCount,
   getMonitoringStartTime,
   getFlaggedTransactions
-} from './database.js';
-import { logger } from './server.js';
-import { notifyClients } from './utils.js';
-import { pushToSheet } from './sheetsExporter.js';
-import { sendDiscordAlert } from './discordNotifier.js';
-import { sendEmailAlert } from './emailNotifier.js';
-import { getMonitoringStatus } from './monitor.js';
+} from '../database/database.js';
+import { logger } from '../server.js';
+import { notifyClients } from '../utils/utils.js';
+import { pushToSheet } from '../utils/sheetsExporter.js';
+import { sendDiscordAlert } from '../utils/discordNotifier.js';
+import { sendEmailAlert } from '../utils/emailNotifier.js';
+import { getMonitoringStatus } from '../monitor.js';
 
 /**
  * Process and distribute an alert to subscribed users based on their preferences
