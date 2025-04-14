@@ -357,16 +357,16 @@
   </div>
 
   <!-- Notifications Sign-up Modal -->
-  <div id="notifications-modal" class="fixed inset-0 dark:bg-black/80 bg-black/50 backdrop-blur-sm flex items-center justify-center hidden z-50">
+  <div id="notificationsModal" class="fixed inset-0 dark:bg-black/80 bg-black/50 backdrop-blur-sm flex items-center justify-center hidden z-50">
     <div class="dark:bg-dark-800 bg-white rounded-lg border dark:border-gold-700/50 border-gold-300/50 max-w-xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-xl">
       <div class="flex justify-between items-center px-6 py-4 border-b dark:border-gold-800/30 border-gold-300/50">
         <h3 class="font-serif text-xl gold-text">Notification Preferences</h3>
-        <button id="close-notifications-modal" class="dark:text-gold-300 text-gold-600 hover:text-gold-400 p-2 rounded-full hover:bg-gold-100/20 transition-colors">
+        <button id="closeNotificationsModal" class="dark:text-gold-300 text-gold-600 hover:text-gold-400 p-2 rounded-full hover:bg-gold-100/20 transition-colors">
           <i class="fas fa-times"></i>
         </button>
       </div>
       <div class="p-6">
-        <form id="notifications-form" class="space-y-6">
+        <form id="notificationsForm" class="space-y-6">
           <div>
             <p class="text-sm dark:text-gold-200 text-gold-700 mb-4">
               Stay updated with real-time alerts about suspicious PYUSD transactions. Choose your preferred notification methods below.
@@ -1373,17 +1373,17 @@
 // Set up notifications modal
 function setupNotificationsModal() {
   // Elements (make sure these variables are defined elsewhere or add declarations)
-  const notificationsBtn = document.getElementById('notificationsBtn');
-  const notificationsModal = document.getElementById('notificationsModal');
-  const closeNotificationsModal = document.getElementById('closeNotificationsModal');
-  const notificationsForm = document.getElementById('notificationsForm');
-  const emailCheckbox = document.getElementById('emailCheckbox');
-  const discordCheckbox = document.getElementById('discordCheckbox');
-  const telegramCheckbox = document.getElementById('telegramCheckbox');
-  const emailField = document.getElementById('emailField');
-  const discordField = document.getElementById('discordField');
-  const telegramField = document.getElementById('telegramField');
-  
+  const notificationsBtn = document.getElementById('notifications-btn');
+const notificationsModal = document.getElementById('notificationsModal');
+const closeNotificationsModal = document.getElementById('closeNotificationsModal');
+const notificationsForm = document.getElementById('notificationsForm');
+const emailCheckbox = document.getElementById('email-checkbox'); // Corrected ID here
+const discordCheckbox = document.getElementById('discord-checkbox'); // Corrected ID here
+const telegramCheckbox = document.getElementById('telegram-checkbox'); // Corrected ID here
+const emailField = document.getElementById('email-field'); // Corrected ID here
+const discordField = document.getElementById('discord-field'); // Corrected ID here
+const telegramField = document.getElementById('telegram-field'); // Corrected ID here
+
   // App state for notification preferences
   if (!appState.notifications) {
     appState.notifications = {

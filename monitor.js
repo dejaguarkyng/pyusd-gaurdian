@@ -7,6 +7,7 @@ import { pushToSheet } from './sheetsExporter.js';
 import { sendDiscordAlert } from './discordNotifier.js';
 import { sendEmailAlert } from './emailNotifier.js';
 import { saveAlert } from './database.js';
+import { saveTransaction } from './database.js';
 import { logger } from './server.js';
 import {
   PYUSD_ADDRESS,
@@ -23,62 +24,58 @@ const limit = pLimit(MAX_CONCURRENT_TRACES);
 // Track latest scanned block
 let latestBlock = STARTING_BLOCK;
 
-
-// Process a single transaction
 async function processTransaction(tx, blockNumber, io) {
   if (!tx || typeof tx !== 'object') {
     logger.warn(`Null or malformed transaction received`, { blockNumber });
     return;
   }
-  
-  console.log('fuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuckfuck');
+
   try {
-    // Add defensive checks for all properties
-    if (!tx) {
-      logger.warn(`Null or undefined transaction received`, { blockNumber });
-      return;
-    }
-    console.log(tx);
-    // Safely access transaction properties with fallbacks
+    // Log the transaction
+    console.log('Processing Transaction:', tx);
+
     const txHash = tx.hash || '0x0';
     const to = tx.to ? String(tx.to).toLowerCase() : null;
     const from = tx.from ? String(tx.from).toLowerCase() : null;
     const input = tx.data || tx.input || '';
     const value = tx.value ? tx.value.toString() : '0';
 
-    // Skip if transaction doesn't have required fields
+    // Skip if 'from' field is missing
     if (!from) {
       logger.warn(`Transaction missing 'from' field, skipping`, { txHash, blockNumber });
       return;
     }
 
-    // Save every PYUSD transaction (limited to 1000)
+    // Check if the transaction involves PYUSD (direct address check)
     const involvesPYUSD = (
       to === PYUSD_ADDRESS ||
       from === PYUSD_ADDRESS ||
       (typeof input === 'string' && input.includes(PYUSD_ADDRESS.slice(2)))
     );
 
-    if (involvesPYUSD) {
-      logger.info(`PYUSD-related TX found`, { txHash, blockNumber });
+    // Additionally, check for PYUSD transfer via input data (ERC-20 transfer)
+    const isPYUSDTransfer = input.startsWith('0xa9059cbb'); // 0xa9059cbb is the signature for ERC-20 transfer
 
+    if (isPYUSDTransfer) {
+      const toAddress = '0x' + input.slice(34, 74); // Extracting the recipient address
+      const transferValue = BigInt('0x' + input.slice(74, 138)); // Extracting the value being transferred
 
-      try {
-        await saveTransaction({
-          txHash,
-          blockNumber,
-          timestamp: new Date(),
-          from,
-          to,
-          input,
-          value
-        });
+      // Log the PYUSD-related transaction
+      logger.info(`PYUSD-relatedutjdgggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg TX found (sending to ${toAddress}, value: ${transferValue})`, { txHash, blockNumber });
 
-        logger.error('Save transaction to database', { error: err.message, txHash });
-      } catch (err) {
-        logger.error('Failed to save transaction to database', { error: err.message, txHash });
-      }
+      // Proceed with processing this transaction as involving PYUSD
+      await saveTransaction({
+        txHash,
+        blockNumber,
+        timestamp: new Date(),
+        from,
+        to: toAddress, // Use the extracted address
+        input,
+        value: transferValue.toString() // Use the extracted value
+      });
+      logger.info('Transaction saved to database', { txHash });
 
+      // Process trace and compliance (same as before)
       const trace = await withRetry(() => getTransactionTrace(txHash));
       if (!trace) {
         logger.warn(`No trace available for transaction`, { txHash });
@@ -94,33 +91,87 @@ async function processTransaction(tx, blockNumber, io) {
           flags: complianceFlags.map(f => f.rule)
         });
 
-        for (const issue of complianceFlags) {
-          const alert = {
-            txHash,
-            blockNumber,
-            timestamp: new Date().toISOString(),
-            rule: issue.rule,
-            details: issue.details,
-            riskReport: report,
-          };
+        // Handle alerts
+        const alert = {
+          txHash,
+          blockNumber,
+          timestamp: new Date().toISOString(),
+          rule: complianceFlags.length ? complianceFlags.map(f => f.rule).join(', ') : 'No rule triggered',
+          details: complianceFlags.length ? complianceFlags.map(f => f.details).join('; ') : 'No details',          
+          riskReport: report,
+        };        
 
-          try {
-            await saveAlert(alert);
-          } catch (err) {
-            logger.error('Failed to save alert to database', { error: err.message, txHash });
-          }
-
-          // Notify WebSocket clients
-          notifyClients(io, alert);
-
-          // Execute external alerts in parallel but handle failures individually
-          await Promise.allSettled([
-            pushToSheet(alert).catch(err => logger.error('Failed to push to sheet', { error: err.message, txHash })),
-            sendDiscordAlert(alert).catch(err => logger.error('Failed to send Discord alert', { error: err.message, txHash })),
-            sendEmailAlert(alert).catch(err => logger.error('Failed to send email alert', { error: err.message, txHash })),
-          ]);
+        try {
+          await saveAlert(alert);
+        } catch (err) {
+          logger.error('Failed to save alert to database', { error: err.message, txHash });
         }
+
+        // Notify clients and send alerts
+        notifyClients(io, alert);
+        await Promise.allSettled([
+          pushToSheet(alert).catch(err => logger.error('Failed to push to sheet', { error: err.message, txHash })),
+          sendDiscordAlert(alert).catch(err => logger.error('Failed to send Discord alert', { error: err.message, txHash })),
+          sendEmailAlert(alert).catch(err => logger.error('Failed to send email alert', { error: err.message, txHash })),
+        ]);
       }
+    } else if (involvesPYUSD) {
+      // If it's a PYUSD-related transaction but not a direct transfer, continue processing
+      logger.info(`PYUSD-related TX detected`, { txHash, blockNumber });
+      
+      await saveTransaction({
+        txHash,
+        blockNumber,
+        timestamp: new Date(),
+        from,
+        to,
+        input,
+        value
+      });
+      logger.info('Transaction saved to database', { txHash });
+
+      // Process trace and compliance (same as before)
+      const trace = await withRetry(() => getTransactionTrace(txHash));
+      if (!trace) {
+        logger.warn(`No trace available for transaction`, { txHash });
+        return;
+      }
+
+      const report = analyzeTrace(trace);
+      const complianceFlags = evaluateCompliance(trace, tx);
+
+      if (report.flagged || complianceFlags.length > 0) {
+        logger.warn(`Transaction flagged for compliance issues`, {
+          txHash,
+          flags: complianceFlags.map(f => f.rule)
+        });
+
+        // Handle alerts
+        const alert = {
+          txHash,
+          blockNumber,
+          timestamp: new Date().toISOString(),
+          rule: complianceFlags.map(f => f.rule),
+          details: complianceFlags.map(f => f.details),
+          riskReport: report,
+        };
+
+        try {
+          await saveAlert(alert);
+        } catch (err) {
+          logger.error('Failed to save alert to database', { error: err.message, txHash });
+        }
+
+        // Notify clients and send alerts
+        notifyClients(io, alert);
+        await Promise.allSettled([
+          pushToSheet(alert).catch(err => logger.error('Failed to push to sheet', { error: err.message, txHash })),
+          sendDiscordAlert(alert).catch(err => logger.error('Failed to send Discord alert', { error: err.message, txHash })),
+          sendEmailAlert(alert).catch(err => logger.error('Failed to send email alert', { error: err.message, txHash })),
+        ]);
+      }
+    } else {
+      console.log('Skipping non-PYUSD transaction:', txHash);
     }
   } catch (error) {
     const txHash = tx && tx.hash ? tx.hash : 'unknown';

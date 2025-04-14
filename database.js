@@ -84,6 +84,11 @@ const TransactionSchema = new mongoose.Schema({
 const Alert = mongoose.model('Alert', AlertSchema);
 const Transaction = mongoose.model('Transaction', TransactionSchema);
 
+
+export async function getTransactionByHash(txHash) {
+  return await Transaction.findOne({ hash: txHash });
+}
+
 // Save alert to database
 export async function saveAlert(alertData) {
   try {
@@ -140,10 +145,7 @@ export async function saveTransaction(txData) {
   }
 }
 
-// Get transaction by hash
-export async function getTransactionByHash(txHash) {
-  return Transaction.findOne({ txHash }).lean();
-}
+
 
 // Get paginated transactions
 export async function getTransactions(page = 1, limit = 20) {

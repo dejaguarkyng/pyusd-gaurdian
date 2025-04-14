@@ -48,7 +48,42 @@ export async function getBlockTransactions(provider, blockNumber) {
     if (!block) {
       throw new Error(`No block returned for block number ${blockNumber}`);
     }
-    console.log('Full block.transactions:', block.transactions);
+
+    // Check if transactions are hashes (i.e., an array of strings)
+    if (Array.isArray(block.transactions) && block.transactions.every(tx => typeof tx === 'string')) {
+      console.log('Block contains transaction hashes, fetching transaction objects...');
+      
+      // Fallback: fetch transaction objects using the hashes
+      const txHashes = block.transactions;
+      const batchSize = 50; // Fetch in batches of 50
+      const transactions = [];
+
+      for (let i = 0; i < txHashes.length; i += batchSize) {
+        const batch = txHashes.slice(i, i + batchSize);
+
+        const results = await Promise.allSettled(
+          batch.map(txHash => withRetry(() => provider.getTransaction(txHash)))
+        );
+
+        results.forEach((result, idx) => {
+          const txHash = batch[idx];
+          if (result.status === 'fulfilled' && result.value) {
+            transactions.push(result.value);
+          } else {
+            logger.error(`Failed to fetch transaction`, {
+              txHash,
+              error: result.reason?.message || result.reason
+            });
+          }
+        });
+      }
+
+      console.log('Fetched transactions using hashes:', transactions);
+      return transactions;
+    }
+
+    // If the transactions are already objects, return them directly
+    console.log('Block contains transaction objects:', block.transactions);
     return block.transactions || [];
 
   } catch (error) {

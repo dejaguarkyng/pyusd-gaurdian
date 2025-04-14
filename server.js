@@ -55,6 +55,36 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
 
+
+app.get('/api/transactions', async (req, res) => {
+  try {
+    const { page = 1, limit = 20 } = req.query;
+    const transactions = await getTransactions(parseInt(page), parseInt(limit));
+    res.json(transactions);
+  } catch (error) {
+    logger.error('Error fetching transactions', { error: error.message });
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/transactions/:txHash', async (req, res) => {
+  try {
+    const { txHash } = req.params;
+    const tx = await getTransactionByHash(txHash);
+
+    if (!tx) {
+      return res.status(404).json({ error: 'Transaction not found' });
+    }
+
+    res.json(tx);
+  } catch (error) {
+    logger.error('Error fetching transaction', { error: error.message });
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+
 // Handle graceful shutdown
 process.on('SIGINT', () => {
   logger.info('Received SIGINT. Shutting down gracefully');

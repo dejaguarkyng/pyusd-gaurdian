@@ -6,7 +6,8 @@ import {
   getUsersForNotification,
   saveNotificationPreferences,
   getNotificationPreferences,
-  deleteNotificationPreferences 
+  deleteNotificationPreferences,
+  getTransactions, getTransactionByHash
 } from './database.js';
 import { logger } from './server.js';
 import { notifyClients } from './utils.js';
@@ -61,6 +62,12 @@ export async function processAlertNotifications(alert) {
     throw error;
   }
 }
+
+
+
+
+
+
 
 /**
  * Send immediate notifications to users
