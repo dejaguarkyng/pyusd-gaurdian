@@ -300,7 +300,7 @@ const NotificationPreferencesSchema = new mongoose.Schema({
   },
   severity: {
     type: String,
-    enum: ['low', 'medium', 'high', 'critical'],
+    enum: ['low', 'medium', 'high','all'],
     default: 'medium'
   },
   frequency: {

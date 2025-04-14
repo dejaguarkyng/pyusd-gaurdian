@@ -496,8 +496,9 @@
                 <label for="alert-severity" class="form-label">Minimum Severity</label>
                 <select id="alert-severity" name="alert-severity" class="form-input">
                   <option value="all">All Alerts</option>
-                  <option value="medium">Medium & High</option>
-                  <option value="high">High Only</option>
+                  <option value="low">low</option>
+                  <option value="medium">medium</option>
+                  <option value="high">high</option>
                 </select>
               </div>
 
@@ -1523,7 +1524,7 @@
       notificationsBtn.addEventListener('click', () => {
         notificationsModal.classList.remove('hidden');
         // Fetch current preferences when opening the modal
-        fetchNotificationPreferences();
+        // fetchNotificationPreferences();
       });
 
       // Close notifications modal
@@ -1598,7 +1599,10 @@
       });
 
       // Fetch current notification preferences from the API
-      async function fetchNotificationPreferences() {
+    /*
+
+
+     async function fetchNotificationPreferences() {
         try {
           showLoading('Loading Preferences', 'Loading your notification settings...');
 
@@ -1648,13 +1652,16 @@
         }
       }
 
+    */
+
+    
       // Save notification preferences to the API
       async function saveNotificationPreferences(formData) {
         try {
-          const response = await fetch('/api/notification-preferences', {
+          const response = await fetch('http://localhost:3000/api/notification-preferences', {
             method: 'POST',
             headers: {
-              'Content-Type': 'application/json'
+              'Content-Type': 'application/json',  // Ensure this is set to application/json
             },
             body: JSON.stringify(formData)
           });
