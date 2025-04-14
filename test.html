@@ -814,7 +814,7 @@
           };
           
           // Add to transactions if not already present
-          if (!appState.transactions.some(t => t.hash === tx.hash)) {
+          if (!appState.transactions.some(t => t.hash === tx.txHash)) {
             appState.transactions.unshift(tx);
           }
         });
@@ -993,8 +993,9 @@ function initializeUI() {
     
     // Fetch transactions directly from API with filter
     const response = await fetchAPI(`/transactions`);
-    const transactions = response.data || [];
-    
+    const transactions = response.transactions || [];
+    console.log('Fetched transactions:', transactions);
+    console.log(transactions.length);
     if (transactions.length === 0) {
       txTableBody.innerHTML = `
         <tr>
@@ -1017,8 +1018,8 @@ function initializeUI() {
     txTableBody.innerHTML = sortedTxs.map(tx => `
       <tr class="${tx.flagged ? 'dark:bg-red-900/10 bg-red-50' : ''} hover:dark:bg-dark-900/20 hover:bg-gold-50/50 transition-colors duration-200">
         <td class="table-cell">
-          <div class="font-mono text-sm truncate max-w-[150px] dark:text-gold-100 text-gray-800" title="${tx.hash}">
-            ${tx.hash.substring(0, 10)}...
+          <div class="font-mono text-sm truncate max-w-[150px] dark:text-gold-100 text-gray-800" title="${tx.txHash}">
+            ${tx.txHash.substring(0, 10)}...
           </div>
         </td>
         <td class="table-cell">
@@ -1030,7 +1031,7 @@ function initializeUI() {
           </span>
         </td>
         <td class="table-cell text-right">
-          <button class="dark:text-gold-400 text-gold-600 hover:text-gold-500 text-sm view-tx px-3 py-1 rounded-md hover:bg-gold-100/20 transition-colors" data-hash="${tx.hash}">
+          <button class="dark:text-gold-400 text-gold-600 hover:text-gold-500 text-sm view-tx px-3 py-1 rounded-md hover:bg-gold-100/20 transition-colors" data-hash="${tx.txHash}">
             View Details
           </button>
         </td>
@@ -1271,7 +1272,7 @@ async function showTransactionDetails(hash) {
             </span>
             <span class="text-sm dark:text-gold-300 text-gold-700">Block #${tx.blockNumber.toLocaleString()}</span>
           </div>
-          <a href="https://etherscan.io/tx/${tx.hash}" target="_blank" class="dark:text-gold-400 text-gold-600 hover:text-gold-500 text-sm flex items-center px-3 py-1 rounded-md hover:bg-gold-100/20 transition-colors">
+          <a href="https://etherscan.io/tx/${tx.txHash}" target="_blank" class="dark:text-gold-400 text-gold-600 hover:text-gold-500 text-sm flex items-center px-3 py-1 rounded-md hover:bg-gold-100/20 transition-colors">
             View on Etherscan
             <i class="fas fa-external-link-alt ml-1"></i>
           </a>
@@ -1280,7 +1281,7 @@ async function showTransactionDetails(hash) {
         <div>
           <h4 class="text-sm dark:text-gold-300 text-gold-700 mb-2">Transaction Hash</h4>
           <div class="code-block">
-            <p class="break-all dark:text-gold-100 text-gray-800">${tx.hash}</p>
+            <p class="break-all dark:text-gold-100 text-gray-800">${tx.txHash}</p>
           </div>
         </div>
 
@@ -1706,7 +1707,7 @@ document.addEventListener('DOMContentLoaded', () => {
           
           // Update transactions from alerts
           const newTransactions = appState.alerts
-            .filter(alert => !appState.transactions.some(tx => tx.hash === alert.txHash))
+            .filter(alert => !appState.transactions.some(tx => tx.txHash === alert.txHash))
             .map(alert => ({
               hash: alert.txHash,
               blockNumber: alert.blockNumber,
