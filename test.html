@@ -897,106 +897,97 @@
   }
 }
 
-    // Initialize UI with safeguards against reload loops
-    function initializeUI() {
-      // Check if we should stop initialization due to reload loop
-      if (window.stopInitialization) {
-        console.log('Initialization stopped to prevent reload loop');
-        return;
-      }
+function initializeUI() {
+  // Check if we should stop initialization due to reload loop
+  if (window.stopInitialization) {
+    console.log('Initialization stopped to prevent reload loop');
+    return;
+  }
+  
+  // Set a flag to prevent multiple initializations
+  if (window.uiInitialized) {
+    console.log('UI already initialized, skipping');
+    return;
+  }
+  window.uiInitialized = true;
+  
+  console.log('UI initialization started');
+  
+  // Initialize theme first to prevent flashing
+  initializeTheme();
+  
+  updateConnectionStatus('connecting');
+  showLoading('Initializing', 'Setting up PYUSD Guardian...');
+  
+  // Use a timeout to fetch data after a short delay
+  setTimeout(async () => {
+    try {
+      // Fetch initial stats
+      await updateStats();
       
-      // Set a flag to prevent multiple initializations
-      if (window.uiInitialized) {
-        console.log('UI already initialized, skipping');
-        return;
-      }
-      window.uiInitialized = true;
+      // Fetch and render transactions and alerts
+      await renderTransactions();
+      await renderAlerts();
       
-      console.log('UI initialization started');
+      // Initialize WebSocket if configured
+      initializeWebSocket();
       
-      // Initialize theme first to prevent flashing
-      initializeTheme();
+      // Set up event listeners
+      setupEventListeners();
       
-      updateConnectionStatus('connecting');
-      showLoading('Initializing', 'Setting up PYUSD Guardian...');
+      // Update connection status
+      updateConnectionStatus('connected');
+    } catch (error) {
+      console.error('Failed to initialize UI:', error);
+      updateConnectionStatus('error');
       
-      // Use a timeout to fetch data after a short delay
-      setTimeout(async () => {
-        try {
-          // Fetch initial status
-          const status = await fetchAPI('/status');
-          appState.currentBlock = status.currentBlock;
-          appState.startTime = new Date(Date.now() - (status.uptime * 1000));
-          
-          // Fetch alerts
-          const alerts = await fetchAPI('/alerts');
-          appState.alerts = alerts.data || [];
-          
-          // Create transactions from alerts
-          appState.transactions = appState.alerts.map(alert => ({
-            hash: alert.txHash,
-            blockNumber: alert.blockNumber,
-            flagged: true,
-            timestamp: new Date(alert.timestamp),
-            complianceFlags: [{
-              rule: alert.rule,
-              details: alert.details,
-              severity: getSeverityFromRule(alert.rule)
-            }]
-          }));
-          
-          // Update UI
-          updateStats();
-          renderTransactions();
-          renderAlerts();
-          
-          // Initialize WebSocket
-          <!-- initializeWebSocket(); -->
-          
-          // Set up event listeners
-          setupEventListeners();
-        } catch (error) {
-          console.error('Failed to initialize UI:', error);
-          updateConnectionStatus('error');
-          
-          // Show empty states
-          txTableBody.innerHTML = `
-            <tr>
-              <td colspan="4" class="px-6 py-10 text-center dark:text-gold-200/50 text-gold-700/50">
-                <div class="flex flex-col items-center justify-center">
-                  <i class="fas fa-exclamation-circle mb-3 text-2xl text-red-500"></i>
-                  <p>Failed to load transactions</p>
-                </div>
-              </td>
-            </tr>
-          `;
-          
-          alertsContainer.innerHTML = `
-            <div class="px-6 py-10 text-center dark:text-gold-200/50 text-gold-700/50">
-              <div class="flex flex-col items-center justify-center">
-                <i class="fas fa-exclamation-circle mb-3 text-2xl text-red-500"></i>
-                <p>Failed to load alerts</p>
-              </div>
+      // Show empty states
+      txTableBody.innerHTML = `
+        <tr>
+          <td colspan="4" class="px-6 py-10 text-center dark:text-gold-200/50 text-gold-700/50">
+            <div class="flex flex-col items-center justify-center">
+              <i class="fas fa-exclamation-circle mb-3 text-2xl text-red-500"></i>
+              <p>Failed to load transactions</p>
             </div>
-          `;
-        } finally {
-          hideLoading();
-        }
-      }, 500); // Short delay to ensure DOM is ready
+          </td>
+        </tr>
+      `;
+      
+      alertsContainer.innerHTML = `
+        <div class="px-6 py-10 text-center dark:text-gold-200/50 text-gold-700/50">
+          <div class="flex flex-col items-center justify-center">
+            <i class="fas fa-exclamation-circle mb-3 text-2xl text-red-500"></i>
+            <p>Failed to load alerts</p>
+          </div>
+        </div>
+      `;
+    } finally {
+      hideLoading();
     }
+  }, 500); // Short delay to ensure DOM is ready
+}
 
     // Update dashboard statistics
-    function updateStats() {
-      currentBlockEl.textContent = appState.currentBlock.toLocaleString();
-      pyusdTxCountEl.textContent = appState.transactions.length;
-      flaggedTxCountEl.textContent = appState.transactions.filter(tx => tx.flagged).length;
-      
-      if (appState.startTime) {
-        monitoringSinceEl.textContent = formatDate(appState.startTime).split(',')[0];
-      } else {
-        monitoringSinceEl.textContent = '-';
-      }
+    async function updateStats() {
+  try {
+    const stats = await fetchAPI('/stats');
+    
+    currentBlockEl.textContent = stats.currentBlock.toLocaleString();
+    pyusdTxCountEl.textContent = stats.transactionCount;
+    flaggedTxCountEl.textContent = stats.flaggedTransactionCount;
+    
+    if (stats.startTime) {
+      monitoringSinceEl.textContent = formatDate(new Date(stats.startTime)).split(',')[0];
+    } else {
+      monitoringSinceEl.textContent = '-';
     }
+  } catch (error) {
+    console.error('Error updating stats:', error);
+    // Don't show an error toast for stats updates to avoid UI clutter
+  }
+}
+
+
     async function renderTransactions() {
   try {
     showLoading('Loading Transactions', 'Fetching transaction data...');
@@ -1755,3 +1746,30 @@ document.addEventListener('DOMContentLoaded', () => {
   </script>
 </body>
 </html>
+
+
+function setupRefreshButton() {
+  refreshBtn.addEventListener('click', async () => {
+    // Show refreshing state
+    refreshBtn.disabled = true;
+    refreshBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i><span class="hidden sm:inline">Refreshing</span>';
+    showLoading('Refreshing Data', 'Fetching the latest transactions and alerts...');
+
+    try {
+      // Refresh all data from APIs
+      await updateStats();
+      await renderTransactions();
+      await renderAlerts();
+      
+      showSuccess('Data refreshed successfully');
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+      showError('Failed to refresh data: ' + error.message);
+    } finally {
+      // Reset button
+      refreshBtn.disabled = false;
+      refreshBtn.innerHTML = '<i class="fas fa-sync-alt mr-2"></i><span class="hidden sm:inline">Refresh</span>';
+      hideLoading();
+    }
+  });
+}
