@@ -23,7 +23,6 @@ const limit = pLimit(MAX_CONCURRENT_TRACES);
 
 // Track latest scanned block
 let latestBlock = STARTING_BLOCK;
-
 async function processTransaction(tx, blockNumber, io) {
   if (!tx || typeof tx !== 'object') {
     logger.warn(`Null or malformed transaction received`, { blockNumber });
@@ -61,7 +60,7 @@ async function processTransaction(tx, blockNumber, io) {
       const transferValue = BigInt('0x' + input.slice(74, 138)); // Extracting the value being transferred
 
       // Log the PYUSD-related transaction
-      logger.info(`PYUSD-relatedutjdgggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg TX found (sending to ${toAddress}, value: ${transferValue})`, { txHash, blockNumber });
+      logger.info(`PYUSD-related TX found (sending to ${toAddress}, value: ${transferValue})`, { txHash, blockNumber });
 
       // Proceed with processing this transaction as involving PYUSD
       await saveTransaction({
@@ -85,6 +84,12 @@ async function processTransaction(tx, blockNumber, io) {
       const report = analyzeTrace(trace);
       const complianceFlags = evaluateCompliance(trace, tx);
 
+      // Ensure severity is valid (low, medium, high)
+      let severity = report?.severity || 'medium';
+      if (!['low', 'medium', 'high'].includes(severity)) {
+        severity = 'medium'; // Default to 'medium' if the severity is invalid
+      }
+
       if (report.flagged || complianceFlags.length > 0) {
         logger.warn(`Transaction flagged for compliance issues`, {
           txHash,
@@ -97,9 +102,10 @@ async function processTransaction(tx, blockNumber, io) {
           blockNumber,
           timestamp: new Date().toISOString(),
           rule: complianceFlags.length ? complianceFlags.map(f => f.rule).join(', ') : 'No rule triggered',
-          details: complianceFlags.length ? complianceFlags.map(f => f.details).join('; ') : 'No details',          
+          details: complianceFlags.length ? complianceFlags.map(f => f.details).join('; ') : 'No details',
           riskReport: report,
-        };        
+          severity, // Adding severity to alert
+        };
 
         try {
           await saveAlert(alert);
@@ -118,7 +124,7 @@ async function processTransaction(tx, blockNumber, io) {
     } else if (involvesPYUSD) {
       // If it's a PYUSD-related transaction but not a direct transfer, continue processing
       logger.info(`PYUSD-related TX detected`, { txHash, blockNumber });
-      
+
       await saveTransaction({
         txHash,
         blockNumber,
@@ -140,13 +146,18 @@ async function processTransaction(tx, blockNumber, io) {
       const report = analyzeTrace(trace);
       const complianceFlags = evaluateCompliance(trace, tx);
 
+      // Ensure severity is valid (low, medium, high)
+      let severity = report?.severity || 'medium';
+      if (!['low', 'medium', 'high'].includes(severity)) {
+        severity = 'medium'; // Default to 'medium' if the severity is invalid
+      }
+
       if (report.flagged || complianceFlags.length > 0) {
         logger.warn(`Transaction flagged for compliance issues`, {
           txHash,
           flags: complianceFlags.map(f => f.rule)
         });
 
-        // Handle alerts
         const alert = {
           txHash,
           blockNumber,
@@ -154,6 +165,7 @@ async function processTransaction(tx, blockNumber, io) {
           rule: complianceFlags.map(f => f.rule),
           details: complianceFlags.map(f => f.details),
           riskReport: report,
+          severity, // Adding severity to alert
         };
 
         try {
@@ -162,13 +174,17 @@ async function processTransaction(tx, blockNumber, io) {
           logger.error('Failed to save alert to database', { error: err.message, txHash });
         }
 
-        // Notify clients and send alerts
-        notifyClients(io, alert);
-        await Promise.allSettled([
-          pushToSheet(alert).catch(err => logger.error('Failed to push to sheet', { error: err.message, txHash })),
-          sendDiscordAlert(alert).catch(err => logger.error('Failed to send Discord alert', { error: err.message, txHash })),
-          sendEmailAlert(alert).catch(err => logger.error('Failed to send email alert', { error: err.message, txHash })),
-        ]);
+        // Only send notifications for high severity
+        if (severity === 'high') {
+          notifyClients(io, alert);
+          await Promise.allSettled([
+            pushToSheet(alert).catch(err => logger.error('Failed to push to sheet', { error: err.message, txHash })),
+            sendDiscordAlert(alert).catch(err => logger.error('Failed to send Discord alert', { error: err.message, txHash })),
+            sendEmailAlert(alert).catch(err => logger.error('Failed to send email alert', { error: err.message, txHash })),
+          ]);
+        } else {
+          logger.info('Alert saved but not notified due to low severity', { txHash, severity });
+        }
       }
     } else {
       console.log('Skipping non-PYUSD transaction:', txHash);

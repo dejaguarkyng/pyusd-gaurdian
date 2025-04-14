@@ -1008,7 +1008,7 @@ function initializeUI() {
     const filterValue = txFilter.value;
     
     // Fetch transactions directly from API with filter
-    const response = await fetchAPI(`/transactions`);
+    const response = await fetchAPI(`/transactions?${filterValue}`);
     const transactions = response.transactions || [];
     console.log('Fetched transactions:', transactions);
     console.log(transactions.length);

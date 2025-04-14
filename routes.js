@@ -10,7 +10,8 @@ import {
   getTransactions, getTransactionByHash,
   getTotalTransactionCount,
   getTotalAlertCount,
-  getMonitoringStartTime
+  getMonitoringStartTime,
+  getFlaggedTransactions
 } from './database.js';
 import { logger } from './server.js';
 import { notifyClients } from './utils.js';
@@ -413,23 +414,38 @@ export function setupRoutes(app, provider) {
     res.status(200).json({ status: 'ok' });
   });
 
+app.get('/api/transactions', async (req, res) => {
+  const { page = 1, limit = 20, flagged = 'false' } = req.query;
+  const parsedPage = parseInt(page);
+  const parsedLimit = parseInt(limit);
+  const onlyFlagged = flagged === 'true';
 
-  app.get('/api/transactions', async (req, res) => {
-    const { page = 1, limit = 20 } = req.query;
-    const parsedPage = parseInt(page);
-    const parsedLimit = parseInt(limit);
-
-    logger.info('Incoming request to /api/transactions', { page: parsedPage, limit: parsedLimit });
-
-    try {
-      const transactions = await getTransactions(parsedPage, parsedLimit);
-      logger.info('Successfully fetched transactions', { count: transactions.length });
-      res.json(transactions);
-    } catch (error) {
-      logger.error('Error fetching transactions', { error: error.message, stack: error.stack });
-      res.status(500).json({ error: error.message });
-    }
+  logger.info('Incoming request to /api/transactions', {
+    page: parsedPage,
+    limit: parsedLimit,
+    flagged: onlyFlagged,
   });
+
+  try {
+    const transactions = onlyFlagged
+      ? await getFlaggedTransactions(parsedPage, parsedLimit)
+      : await getTransactions(parsedPage, parsedLimit);
+
+    logger.info('Successfully fetched transactions', {
+      count: transactions.length,
+      flagged: onlyFlagged,
+    });
+
+    res.json(transactions);
+  } catch (error) {
+    logger.error('Error fetching transactions', {
+      error: error.message,
+      stack: error.stack,
+    });
+    res.status(500).json({ error: error.message });
+  }
+});
+
 
 
 

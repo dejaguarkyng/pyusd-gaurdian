@@ -373,6 +373,19 @@ export async function getNotificationPreferences({ email, discord, telegram }) {
   }
 }
 
+export async function getFlaggedTransactions(page = 1, limit = 20) {
+  const skip = (page - 1) * limit;
+
+  // Assuming you mark flagged transactions with a `flagged: true` or similar field
+  return await Transaction.find({ flagged: true })
+    .sort({ timestamp: -1 })
+    .skip(skip)
+    .limit(limit)
+    .lean();
+}
+
+
+
 // Delete notification preferences by userId
 export async function deleteNotificationPreferences(userId) {
   try {
