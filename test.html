@@ -1160,8 +1160,8 @@ async function renderAlerts() {
     
     // Fetch alerts directly from API with filter
     const response = await fetchAPI(`/alerts?severity=${filterValue}`);
-    const alerts = response.data || [];
-    
+    const alerts = response.alerts;
+    console.log('Fetched alerts:', alerts);
     if (alerts.length === 0) {
       alertsContainer.innerHTML = `
         <div class="px-6 py-10 text-center dark:text-gold-200/50 text-gold-700/50">
@@ -1235,6 +1235,7 @@ async function renderAlerts() {
   }
 }
 async function showTransactionDetails(hash) {
+  console.log(hash);
   txModal.classList.remove('hidden');
   txDetailsContent.innerHTML = `
     <div class="flex justify-center items-center py-10">

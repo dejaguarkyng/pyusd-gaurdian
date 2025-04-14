@@ -86,8 +86,22 @@ const Transaction = mongoose.model('Transaction', TransactionSchema);
 
 
 export async function getTransactionByHash(txHash) {
-  return await Transaction.findOne({ hash: txHash });
+  try {
+    const transaction = await Transaction.findOne({ hash: txHash });
+
+    if (transaction) {
+      console.log(`[INFO] Transaction found for hash: ${txHash}`);
+    } else {
+      console.warn(`[WARN] No transaction found for hash: ${txHash}`);
+    }
+
+    return transaction;
+  } catch (error) {
+    console.error(`[ERROR] Failed to fetch transaction for hash: ${txHash}`, error);
+    throw error;
+  }
 }
+
 
 // Save alert to database
 export async function saveAlert(alertData) {
