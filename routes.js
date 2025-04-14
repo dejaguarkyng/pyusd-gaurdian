@@ -214,17 +214,24 @@ export function setupRoutes(app, provider) {
     });
   });
 
-  // Get all alerts with pagination
-  app.get('/api/alerts', async (req, res) => {
-    try {
-      const { page = 1, limit = 20 } = req.query;
-      const alerts = await getAlerts(parseInt(page), parseInt(limit));
-      res.json(alerts);
-    } catch (error) {
-      logger.error('Error fetching alerts', { error: error.message });
-      res.status(500).json({ error: error.message });
-    }
-  });
+// Get all alerts with pagination and optional severity filter
+app.get('/api/alerts', async (req, res) => {
+  try {
+    const { page = 1, limit = 20, severity } = req.query;
+
+    // Build the filter query based on severity, if provided
+    const filter = severity ? { severity } : {};
+
+    // Fetch the alerts with pagination and optional severity filter
+    const alerts = await getAlerts(parseInt(page), parseInt(limit), filter);
+
+    res.json(alerts);
+  } catch (error) {
+    logger.error('Error fetching alerts', { error: error.message });
+    res.status(500).json({ error: error.message });
+  }
+});
+
 
   // Get alert by transaction hash
   app.get('/api/alerts/:txHash', async (req, res) => {
