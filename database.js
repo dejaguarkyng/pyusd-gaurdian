@@ -283,12 +283,6 @@ export async function getAlertsByRule(rule, page = 1, limit = 20) {
 
 // Define Notification Preferences Schema
 const NotificationPreferencesSchema = new mongoose.Schema({
-  userId: {
-    type: String,
-    required: true,
-    index: true,
-    unique: true
-  },
   email: {
     type: String,
     validate: {

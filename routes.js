@@ -206,6 +206,8 @@ function sendTelegramAlert(telegramUsername, alert) {
 }
 
 export function setupRoutes(app, provider) {
+
+
   // Status endpoint
   app.get('/api/status', (req, res) => {
     const status = getMonitoringStatus();
@@ -327,18 +329,13 @@ app.get('/api/alerts', async (req, res) => {
   app.post('/api/notification-preferences', async (req, res) => {
     try {
       const { email, discord, telegram, severity, frequency } = req.body;
-
+      console.log('Received notification preferences:', req.body);
       // Validate the request
       if (!email && !discord && !telegram) {
         return res.status(400).json({
           error: 'Please select at least one notification method'
         });
       }
-
-      // Get the user ID (this would typically come from authentication)
-      // For now, we'll use a default user ID for demonstration
-      const userId = req.user?.id || 'default-user';
-
       // Create preferences object
       const preferencesData = {
         email: email || null,
@@ -349,10 +346,9 @@ app.get('/api/alerts', async (req, res) => {
       };
 
       // Save to database
-      const savedPreferences = await saveNotificationPreferences(userId, preferencesData);
+      const savedPreferences = await saveNotificationPreferences(preferencesData);
 
       logger.info('Notification preferences saved', {
-        userId,
         email: email ? true : false,
         discord: discord ? true : false,
         telegram: telegram ? true : false,
