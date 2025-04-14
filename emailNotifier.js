@@ -1,12 +1,12 @@
 import nodemailer from 'nodemailer';
 import { config } from 'dotenv';
 import mongoose from 'mongoose';
-import NotificationPreference from './models/NotificationPreference.js'; // Adjust path as needed
+import { NotificationPreference } from './database.js'; // Adjust path as needed
 
 config();
 
 const transporter = nodemailer.createTransport({
-  host: 'mail.tokenated.com',
+  host: process.env.EMAIL_HOST,
   port: 587,
   secure: false,
   auth: {
@@ -19,7 +19,7 @@ const transporter = nodemailer.createTransport({
 });
 
 export async function sendEmailAlert(alertData) {
-  const severityLevels = ['low', 'medium', 'high', 'critical'];
+  const severityLevels = ['low', 'medium', 'high'];
 
   const alertSeverityIndex = severityLevels.indexOf(alertData.severity?.toLowerCase() || 'medium');
 
